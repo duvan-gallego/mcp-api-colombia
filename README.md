@@ -1,6 +1,7 @@
 # mcp-api-colombia
 
 ## Getting started
+
 After cloning the project, install all the dependencies
 
 ```
@@ -13,8 +14,14 @@ Once all the dependencies are installed, generate the [api-colombia](https://api
 pnpm prepare
 ```
 
-After installing, start the server by runnin
+Test it by using the MCP Inspector
 
 ```
-pnpm dev
+npx @modelcontextprotocol/inspector node dist/index.js
+```
+
+Note: If you make changes to your code, remember to rebuild:
+
+```
+pnpm build
 ```
