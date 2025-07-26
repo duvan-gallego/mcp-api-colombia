@@ -1,6 +1,6 @@
 import { ToolError } from "./common/api-errors.js";
 import { log } from "./common/logging.js";
-import { ToolResponse } from "./common/schemas.js";
+import { ToolRequest, ToolResponse } from "./common/schemas.js";
 import { z } from "zod";
 
 export function createToolResponse(
@@ -30,6 +30,18 @@ export function handleToolError(error: unknown, context: string): never {
   throw new ToolError(`${context} failed: ${errorMessage}`);
 }
 
+export function validateToolInput<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+  context: string,
+): T {
+  try {
+    return schema.parse(data);
+  } catch (error) {
+    handleToolError(error, `Input validation for ${context}`);
+  }
+}
+
 export async function executeApiCall<T>(
   apiCall: () => Promise<T>,
   context: string,
@@ -39,4 +51,10 @@ export async function executeApiCall<T>(
   } catch (error) {
     handleToolError(error, context);
   }
+}
+
+export function extractArguments<T extends Record<string, unknown>>(
+  request: ToolRequest,
+): T {
+  return (request.params.arguments || {}) as T;
 }
