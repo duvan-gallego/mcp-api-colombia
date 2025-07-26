@@ -15,6 +15,7 @@ export interface ToolResponse {
 }
 
 export const commonSchemas = {
+  id: z.number().min(1, "Id must be greater than 0"),
   sortDirection: z.enum(["asc", "desc"]).optional(),
   sortBy: z.string().optional(),
 } as const;

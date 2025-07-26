@@ -2,8 +2,9 @@ import { z } from "zod";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { ToolHandlers } from "../../utils/types.js";
 import { createToolResponse, executeApiCall, extractArguments, validateToolInput } from "../../utils/utils.js";
-import { getApiV1Region } from "../../client/generated/index.js";
-import { commonSchemas } from "../../utils/common/schemas.js";
+import { getApiV1Region, getApiV1RegionById, getApiV1RegionByIdDepartments } from "../../client/generated/index.js";
+import { commonSchemas, emptySchema } from "../../utils/common/schemas.js";
+import { id } from "zod/v4/locales";
 
 
 // Schema definitions
@@ -12,9 +13,19 @@ const getApiV1RegionSchema = z.object({
   sortDirection: commonSchemas.sortDirection,
 });
 
+const getApiV1RegionByIdSchema = z.object({
+  id: commonSchemas.id,
+});
 
-const GET_REGION: Tool = {
-  name: "get-region",
+const getApiV1RegionByIdDepartmentsSchema = z.object({
+  id: commonSchemas.id,
+  sortBy: commonSchemas.sortBy,
+  sortDirection: commonSchemas.sortDirection,
+});
+
+// Tool definitions
+const GET_REGIONS: Tool = {
+  name: "get-regions",
   description: "Get the list of regions in Colombia.",
   inputSchema: {
     type: "object",
@@ -33,12 +44,53 @@ const GET_REGION: Tool = {
   }
 };
 
+const GET_REGION_BY_ID: Tool = {
+  name: "get-region-by-id",
+  description: "Get a specific region information by its ID.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "number",
+        description: "The ID of the region to retrieve."
+      },
+      required: [id],
+    },
+  }
+};
+
+const GET_REGION_BY_ID_DEPARTMENTS: Tool = {
+  name: "get-region-by-id-departments",
+  description: "Get a specific region information by its ID including departments.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      id: {
+        type: "number",
+        description: "The ID of the region to retrieve."
+      },
+      sortBy: {
+        type: "string",
+        description: "It can be sorted by any of the fields that have numerical, string, or date values (for example: Id, name, description, etc.)."
+      },
+      sortDirection: {
+        type: "string",
+        description: "Direction to sort the regions. Options: 'asc', 'desc'",
+        enum: ["asc", "desc"]
+      },
+      required: [id],
+    },
+  }
+};
+
 export const REGION_TOOLS = [
-  GET_REGION
+  GET_REGIONS,
+  GET_REGION_BY_ID,
+  GET_REGION_BY_ID_DEPARTMENTS
 ];
 
 export const REGION_HANDLERS: ToolHandlers = {
-  "get-region": async (request) => {
+  "get-regions": async (request) => {
 
     const { sortBy, sortDirection } = extractArguments<{
       sortBy?: string;
@@ -59,4 +111,43 @@ export const REGION_HANDLERS: ToolHandlers = {
     
     return createToolResponse(region);
   },
+  "get-region-by-id": async (request) => {
+    const { id } = extractArguments<{ id: number }>(request);
+
+    // Validate input
+    validateToolInput(
+      getApiV1RegionByIdSchema,
+      { id },
+      `Get region by ID: ${id}`,
+    );
+
+    const region = await executeApiCall(
+      () => getApiV1RegionById({ path: { id } }),
+      `Get region by ID: ${id}`
+    );
+
+    return createToolResponse(region);
+  },
+  "get-region-by-id-departments": async (request) => {
+    const { id, sortBy, sortDirection } = extractArguments<{
+      id: number;
+      sortBy?: string;
+      sortDirection?: "asc" | "desc";
+    }>(request);
+
+
+    // Validate input
+    validateToolInput(
+      getApiV1RegionByIdDepartmentsSchema,
+      { id, sortBy, sortDirection },
+      `Get region by ID including departments: ${id}`,
+    );
+
+    const region = await executeApiCall(
+      () => getApiV1RegionByIdDepartments({ path: { id }, query: { sortBy, sortDirection } }),
+      `Get region by ID including departments: ${id}`
+    );
+
+    return createToolResponse(region);
+  }
 };
