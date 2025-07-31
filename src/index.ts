@@ -9,6 +9,7 @@ import {
 import { version } from "./utils/version.js";
 import { log } from "./utils/helpers.js";
 import { REGION_HANDLERS, REGION_TOOLS } from "./tools/region/index.js";
+import { MCPStdioServer } from "./stdio-server.js";
 
 
 process.on("uncaughtException", (error) => {
@@ -67,16 +68,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 export async function main() {
   log("Starting server...");
-
-  try {
-    const transport = new StdioServerTransport();
-    log("Created transport");
-    await server.connect(transport);
-    log("Server connected and running");
-  } catch (error) {
-    log("Fatal error:", error);
-    process.exit(1);
-  }
+  const mcpStdioServer = new MCPStdioServer(server);
+  await mcpStdioServer.start();
 }
 
 await main();
