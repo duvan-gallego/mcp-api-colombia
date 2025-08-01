@@ -12,18 +12,24 @@ export default [
       sourceType: 'module',
     },
 
+    ignores: ['node_modules/', 'dist/', 'src/client/**'],
+
     plugins: {
       '@typescript-eslint': tseslint,
       prettier: prettierPlugin,
     },
 
     rules: {
+      // TypeScript recommended rules
       ...tseslint.configs.recommended.rules,
+      // Disable ESLint rules that conflict with Prettier
       ...prettierConfig.rules,
+      // Custom rules
       '@typescript-eslint/no-unused-vars': 'warn',
-      'no-console': 'warn',
+      'no-console': 'warn',      
       semi: ['error', 'always'],
-      quotes: ['error', 'double'],
+      quotes: ['warn', 'single'],
+      // Ensure Prettier formatting is enforced
       'prettier/prettier': 'error',
     },
   },
