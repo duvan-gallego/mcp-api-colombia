@@ -1,11 +1,10 @@
-import { z } from "zod";
-import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { z } from 'zod';
+import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 export const emptySchema = {
-  type: "object",
+  type: 'object',
   properties: {},
 } as const;
-
 
 export interface ToolResponse {
   content: Array<{ type: string; text: string }>;
@@ -15,8 +14,8 @@ export interface ToolResponse {
 }
 
 export const commonSchemas = {
-  id: z.number().min(1, "Id must be greater than 0"),
-  sortDirection: z.enum(["asc", "desc"]).optional(),
+  id: z.number().min(1, 'Id must be greater than 0'),
+  sortDirection: z.enum(['asc', 'desc']).optional(),
   sortBy: z.string().optional(),
 } as const;
 

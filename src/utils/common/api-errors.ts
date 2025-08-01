@@ -1,5 +1,5 @@
 export const enum ErrorCode {
-  TOOL = "TOOL_ERROR",
+  TOOL = 'TOOL_ERROR',
 }
 
 export const enum HttpStatus {
@@ -12,12 +12,7 @@ export class BaseError extends Error {
   readonly details?: unknown;
   readonly timestamp: string;
 
-  constructor(
-    message: string,
-    code: ErrorCode,
-    status: HttpStatus,
-    details?: unknown,
-  ) {
+  constructor(message: string, code: ErrorCode, status: HttpStatus, details?: unknown) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;

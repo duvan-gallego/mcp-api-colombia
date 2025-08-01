@@ -1,16 +1,13 @@
-import { ToolError } from "./common/api-errors.js";
-import { log } from "./common/logging.js";
-import { ToolRequest, ToolResponse } from "./common/schemas.js";
-import { z } from "zod";
+import { ToolError } from './common/api-errors.js';
+import { log } from './common/logging.js';
+import { ToolRequest, ToolResponse } from './common/schemas.js';
+import { z } from 'zod';
 
-export function createToolResponse(
-  data: unknown,
-  isError = false,
-): ToolResponse {
+export function createToolResponse(data: unknown, isError = false): ToolResponse {
   return {
     content: [
       {
-        type: "text",
+        type: 'text',
         text: JSON.stringify(data),
       },
     ],
@@ -30,11 +27,7 @@ export function handleToolError(error: unknown, context: string): never {
   throw new ToolError(`${context} failed: ${errorMessage}`);
 }
 
-export function validateToolInput<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown,
-  context: string,
-): T {
+export function validateToolInput<T>(schema: z.ZodSchema<T>, data: unknown, context: string): T {
   try {
     return schema.parse(data);
   } catch (error) {
@@ -42,10 +35,7 @@ export function validateToolInput<T>(
   }
 }
 
-export async function executeApiCall<T>(
-  apiCall: () => Promise<T>,
-  context: string,
-): Promise<T> {
+export async function executeApiCall<T>(apiCall: () => Promise<T>, context: string): Promise<T> {
   try {
     return await apiCall();
   } catch (error) {
@@ -53,8 +43,6 @@ export async function executeApiCall<T>(
   }
 }
 
-export function extractArguments<T extends Record<string, unknown>>(
-  request: ToolRequest,
-): T {
+export function extractArguments<T extends Record<string, unknown>>(request: ToolRequest): T {
   return (request.params.arguments || {}) as T;
 }

@@ -1,94 +1,98 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { log } from "./utils/helpers.js";
-import express, { Request, Response } from "express";
-import { randomUUID } from "crypto";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { Notification, InitializeRequestSchema, JSONRPCError, JSONRPCNotification, LoggingMessageNotification } from "@modelcontextprotocol/sdk/types.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { log } from './utils/helpers.js';
+import express, { Request, Response } from 'express';
+import { randomUUID } from 'crypto';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import {
+  Notification,
+  InitializeRequestSchema,
+  JSONRPCError,
+  JSONRPCNotification,
+  LoggingMessageNotification,
+} from '@modelcontextprotocol/sdk/types.js';
 
-const SESSION_ID_HEADER_NAME = "mcp-session-id"
-const JSON_RPC = "2.0"
+const SESSION_ID_HEADER_NAME = 'mcp-session-id';
+const JSON_RPC = '2.0';
 
 export class MCPStreamableHttpServer {
   server: Server;
 
   // to support multiple simultaneous connections
-  transports: { [sessionId: string]: StreamableHTTPServerTransport } = {}
+  transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 
   constructor(server: Server) {
     this.server = server;
   }
 
   async start() {
+    log('Starting MCP server using Streamable HTTP transport...');
 
-    log("Starting MCP server using Streamable HTTP transport...");
+    const app = express();
+    app.use(express.json());
 
-    const app = express()
-    app.use(express.json())
-
-    const router = express.Router()
+    const router = express.Router();
 
     // endpoint for the client to use for sending messages
-    const MCP_ENDPOINT = "/mcp"
+    const MCP_ENDPOINT = '/mcp';
 
     // handler
     router.post(MCP_ENDPOINT, async (req: Request, res: Response) => {
-      await this.handlePostRequest(req, res)
-    })
+      await this.handlePostRequest(req, res);
+    });
 
     // Handle GET requests for SSE streams (using built-in support from StreamableHTTP)
     router.get(MCP_ENDPOINT, async (req: Request, res: Response) => {
-      await this.handleGetRequest(req, res)
-    })
+      await this.handleGetRequest(req, res);
+    });
 
-
-    app.use('/', router)
+    app.use('/', router);
 
     const PORT = process.env.MCP_PORT || process.env.PORT || 3000;
     app.listen(PORT, () => {
       log(`MCP Streamable HTTP server running on port ${PORT}`);
       log(`HTTP endpoint: http://localhost:${PORT}/mcp`);
-    })
+    });
 
     process.on('SIGINT', async () => {
-      log('Shutting down server...')
-      await this.cleanup()
-      process.exit(0)
-    })
+      log('Shutting down server...');
+      await this.cleanup();
+      process.exit(0);
+    });
   }
 
   async handleGetRequest(req: Request, res: Response) {
-    log("get request received")
+    log('get request received');
     // if server does not offer an SSE stream at this endpoint.
     // res.status(405).set('Allow', 'POST').send('Method Not Allowed')
 
-    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined
+    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
     if (!sessionId || !this.transports[sessionId]) {
-      res.status(400).json(this.createErrorResponse("Bad Request: invalid session ID or method."))
-      return
+      res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
+      return;
     }
 
-    console.log(`Establishing SSE stream for session ${sessionId}`)
-    const transport = this.transports[sessionId]
-    await transport.handleRequest(req, res)
-    await this.streamMessages(transport)
+    console.log(`Establishing SSE stream for session ${sessionId}`);
+    const transport = this.transports[sessionId];
+    await transport.handleRequest(req, res);
+    await this.streamMessages(transport);
 
-    return
+    return;
   }
 
   async handlePostRequest(req: Request, res: Response) {
-    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined
+    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
 
-    console.log("post request received")
-    console.log("body: ", req.body)
+    console.log('post request received');
+    console.log('body: ', req.body);
 
-    let transport: StreamableHTTPServerTransport
+    let transport: StreamableHTTPServerTransport;
 
     try {
       // reuse existing transport
       if (sessionId && this.transports[sessionId]) {
-        transport = this.transports[sessionId]
-        await transport.handleRequest(req, res, req.body)
-        return
+        transport = this.transports[sessionId];
+        await transport.handleRequest(req, res, req.body);
+        return;
       }
 
       // create new transport
@@ -97,29 +101,27 @@ export class MCPStreamableHttpServer {
           sessionIdGenerator: () => randomUUID(),
           // for stateless mode:
           // sessionIdGenerator: () => undefined
-        })
+        });
 
-        await this.server.connect(transport)
-        await transport.handleRequest(req, res, req.body)
+        await this.server.connect(transport);
+        await transport.handleRequest(req, res, req.body);
 
         // session ID will only be available (if in not Stateless-Mode)
         // after handling the first request
-        const sessionId = transport.sessionId
+        const sessionId = transport.sessionId;
         if (sessionId) {
-          this.transports[sessionId] = transport
+          this.transports[sessionId] = transport;
         }
 
-        return
+        return;
       }
 
-      res.status(400).json(this.createErrorResponse("Bad Request: invalid session ID or method."))
-      return
-
+      res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
+      return;
     } catch (error) {
-
-      console.error('Error handling MCP request:', error)
-      res.status(500).json(this.createErrorResponse("Internal server error."))
-      return
+      console.error('Error handling MCP request:', error);
+      res.status(500).json(this.createErrorResponse('Internal server error.'));
+      return;
     }
   }
 
@@ -129,68 +131,64 @@ export class MCPStreamableHttpServer {
     try {
       // based on LoggingMessageNotificationSchema to trigger setNotificationHandler on client
       const message: LoggingMessageNotification = {
-        method: "notifications/message",
-        params: { level: "info", data: "SSE Connection established" }
-      }
+        method: 'notifications/message',
+        params: { level: 'info', data: 'SSE Connection established' },
+      };
 
-      this.sendNotification(transport, message)
+      this.sendNotification(transport, message);
 
-      let messageCount = 0
+      let messageCount = 0;
 
       const interval = setInterval(async () => {
+        messageCount++;
 
-        messageCount++
-
-        const data = `Message ${messageCount} at ${new Date().toISOString()}`
+        const data = `Message ${messageCount} at ${new Date().toISOString()}`;
 
         const message: LoggingMessageNotification = {
-          method: "notifications/message",
-          params: { level: "info", data: data }
-        }
-
+          method: 'notifications/message',
+          params: { level: 'info', data: data },
+        };
 
         try {
+          this.sendNotification(transport, message);
 
-          this.sendNotification(transport, message)
-
-          console.log(`Sent: ${data}`)
+          console.log(`Sent: ${data}`);
 
           if (messageCount === 2) {
-            clearInterval(interval)
+            clearInterval(interval);
 
             const message: LoggingMessageNotification = {
-              method: "notifications/message",
-              params: { level: "info", data: "Streaming complete!" }
-            }
+              method: 'notifications/message',
+              params: { level: 'info', data: 'Streaming complete!' },
+            };
 
-            this.sendNotification(transport, message)
+            this.sendNotification(transport, message);
 
-            console.log("Stream completed")
+            console.log('Stream completed');
           }
-
         } catch (error) {
-          console.error("Error sending message:", error)
-          clearInterval(interval)
+          console.error('Error sending message:', error);
+          clearInterval(interval);
         }
-
-      }, 1000)
-
+      }, 1000);
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error('Error sending message:', error);
     }
   }
 
-
   async cleanup() {
-    await this.server.close()
+    await this.server.close();
   }
 
-  private async sendNotification(transport: StreamableHTTPServerTransport, notification: Notification) {
+  private async sendNotification(
+    transport: StreamableHTTPServerTransport,
+    notification: Notification
+  ) {
     const rpcNotification: JSONRPCNotification = {
       ...notification,
       jsonrpc: JSON_RPC,
-    }
-    await transport.send(rpcNotification)
+    };
+    await transport.send(rpcNotification);
   }
 
   private createErrorResponse(message: string): JSONRPCError {
@@ -201,22 +199,22 @@ export class MCPStreamableHttpServer {
         message: message,
       },
       id: randomUUID(),
-    }
+    };
   }
 
   private isInitializeRequest(body: any): boolean {
     const isInitial = (data: any) => {
-      const result = InitializeRequestSchema.safeParse(data)
-      return result.success
-    }
+      const result = InitializeRequestSchema.safeParse(data);
+      return result.success;
+    };
     if (Array.isArray(body)) {
-      return body.some(request => isInitial(request))
+      return body.some((request) => isInitial(request));
     }
-    return isInitial(body)
+    return isInitial(body);
   }
 
   async stop() {
-    log("Stopping MCP Streamable HTTP server...");
+    log('Stopping MCP Streamable HTTP server...');
     await this.cleanup();
   }
 }
