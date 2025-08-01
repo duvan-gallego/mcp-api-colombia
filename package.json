@@ -17,10 +17,13 @@
     "build": "rm -rf dist && tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "lint": "eslint src/",
     "test": "vitest",
-    "prepare": "rm -rf src/client && rm -rf dist && pnpm generate:api",    
-    "generate:api": "openapi-ts"
+    "prepare": "rm -rf src/client && rm -rf dist && pnpm generate:api",
+    "generate:api": "openapi-ts",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "lint:check": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
   },
   "keywords": [
     "mcp",
