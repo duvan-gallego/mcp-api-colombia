@@ -1,15 +1,9 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { version } from "./utils/version.js";
 import { log } from "./utils/helpers.js";
-import { REGION_HANDLERS, REGION_TOOLS } from "./tools/region/index.js";
 import { MCPStdioServer } from "./stdio-server.js";
+import { MCPStreamableHttpServer } from "./streamablehttp-server.js";
+import { createServer } from "./create-server.js";
 
 
 process.on("uncaughtException", (error) => {
@@ -23,53 +17,17 @@ process.on("unhandledRejection", (error) => {
 });
 
 
-const ALL_TOOLS = [
-  ...REGION_TOOLS,
-];
+export async function main() { 
 
-const ALL_HANDLERS = {
-  ...REGION_HANDLERS,
-};
+  log("Starting MCP server...");
+  // Determine transport type
+  const transportType = process.env.MCP_TRANSPORT ||
+    (process.argv.includes('--sse') ? 'sse' : 'stdio')
 
-const server = new Server(
-  { name: "mcp-api-colombia", version },
-  { capabilities: { tools: {} } },
-);
+  const server = await createServer();
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  log("Received list tools request");
-  return { tools: ALL_TOOLS };
-});
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const toolName = request.params.name;
-  log("Received tool call:", toolName);
-
-  try {
-    const handler = ALL_HANDLERS[toolName];
-    if (!handler) {
-      throw new Error(`Unknown tool: ${toolName}`);
-    }
-    return await handler(request);
-  } catch (error) {
-    log("Error handling tool call:", error);
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-        },
-      ],
-      isError: true,
-    };
-  }
-});
-
-
-export async function main() {
-  log("Starting server...");
-  const mcpStdioServer = new MCPStdioServer(server);
-  await mcpStdioServer.start();
+  const mcpServer = transportType === 'sse' ? new MCPStreamableHttpServer(server) : new MCPStdioServer(server);
+  await mcpServer.start();
 }
 
 await main();

@@ -10,6 +10,9 @@ export class MCPStdioServer {
   }
 
   async start() {
+
+    log("Starting MCP server using Stdio transport...");
+
     try {
       const transport = new StdioServerTransport();
       log("StdioServerTransport created");
