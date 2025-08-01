@@ -71,7 +71,7 @@ export class MCPStreamableHttpServer {
       return;
     }
 
-    console.log(`Establishing SSE stream for session ${sessionId}`);
+    log(`Establishing SSE stream for session ${sessionId}`);
     const transport = this.transports[sessionId];
     await transport.handleRequest(req, res);
     await this.streamMessages(transport);
@@ -82,8 +82,8 @@ export class MCPStreamableHttpServer {
   async handlePostRequest(req: Request, res: Response) {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
 
-    console.log('post request received');
-    console.log('body: ', req.body);
+    log('post request received');
+    log('body: ', req.body);
 
     let transport: StreamableHTTPServerTransport;
 
@@ -119,7 +119,7 @@ export class MCPStreamableHttpServer {
       res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
       return;
     } catch (error) {
-      console.error('Error handling MCP request:', error);
+      log('Error handling MCP request:', error);
       res.status(500).json(this.createErrorResponse('Internal server error.'));
       return;
     }
@@ -152,7 +152,7 @@ export class MCPStreamableHttpServer {
         try {
           this.sendNotification(transport, message);
 
-          console.log(`Sent: ${data}`);
+          log(`Sent: ${data}`);
 
           if (messageCount === 2) {
             clearInterval(interval);
@@ -164,15 +164,15 @@ export class MCPStreamableHttpServer {
 
             this.sendNotification(transport, message);
 
-            console.log('Stream completed');
+            log('Stream completed');
           }
         } catch (error) {
-          console.error('Error sending message:', error);
+          log('Error sending message:', error);
           clearInterval(interval);
         }
       }, 1000);
     } catch (error) {
-      console.error('Error sending message:', error);
+      log('Error sending message:', error);
     }
   }
 

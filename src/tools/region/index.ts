@@ -12,7 +12,7 @@ import {
   getApiV1RegionById,
   getApiV1RegionByIdDepartments,
 } from '../../client/generated/index.js';
-import { commonSchemas, emptySchema } from '../../utils/common/schemas.js';
+import { commonSchemas } from '../../utils/common/schemas.js';
 import { id } from 'zod/v4/locales';
 
 // Schema definitions
@@ -45,7 +45,7 @@ const GET_REGIONS: Tool = {
       },
       sortDirection: {
         type: 'string',
-        description: "Direction to sort the regions. Options: 'asc', 'desc'",
+        description: 'Direction to sort the regions. Options: "asc", "desc"',
         enum: ['asc', 'desc'],
       },
       required: [],
@@ -85,7 +85,7 @@ const GET_REGION_BY_ID_DEPARTMENTS: Tool = {
       },
       sortDirection: {
         type: 'string',
-        description: "Direction to sort the regions. Options: 'asc', 'desc'",
+        description: 'Direction to sort the regions. Options: "asc", "desc"',
         enum: ['asc', 'desc'],
       },
       required: [id],

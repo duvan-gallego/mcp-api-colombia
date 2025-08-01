@@ -18,7 +18,7 @@ export default [
       '@typescript-eslint': tseslint,
       prettier: prettierPlugin,
     },
-
+    
     rules: {
       // TypeScript recommended rules
       ...tseslint.configs.recommended.rules,
@@ -26,7 +26,8 @@ export default [
       ...prettierConfig.rules,
       // Custom rules
       '@typescript-eslint/no-unused-vars': 'warn',
-      'no-console': 'warn',      
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-console': 'warn',
       semi: ['error', 'always'],
       quotes: ['warn', 'single'],
       // Ensure Prettier formatting is enforced
