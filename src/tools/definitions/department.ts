@@ -7,11 +7,8 @@ import {
   extractArguments,
   validateToolInput,
 } from '../../utils/utils.js';
-import {
-  getApiV1Department,
-} from '../../client/generated/index.js';
+import { getApiV1Department, getApiV1DepartmentById } from '../../client/generated/index.js';
 import { commonSchemas } from '../../utils/common/schemas.js';
-
 
 // Schema definitions
 const getApiV1DepartmentSchema = z.object({
@@ -41,7 +38,22 @@ const GET_DEPARTMENTS: Tool = {
   },
 };
 
-export const DEPARTMENT_TOOLS = [GET_DEPARTMENTS];
+const GET_DEPARTMENT_BY_ID: Tool = {
+  name: 'get-department-by-id',
+  description: 'Get a specific department information by its ID.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'number',
+        description: 'The ID of the department to retrieve.',
+      },
+      required: ['id'],
+    },
+  },
+};
+
+export const DEPARTMENT_TOOLS = [GET_DEPARTMENTS, GET_DEPARTMENT_BY_ID];
 
 export const DEPARTMENT_HANDLERS: ToolHandlers = {
   'get-departments': async (request) => {
@@ -60,6 +72,19 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
     const department = await executeApiCall(
       () => getApiV1Department({ query: { sortBy, sortDirection } }),
       'Get departments'
+    );
+
+    return createToolResponse(department);
+  },
+  'get-department-by-id': async (request) => {
+    const { id } = extractArguments<{ id: number }>(request);
+
+    // Validate input
+    validateToolInput(z.object({ id: z.number() }), { id }, `Get department by ID: ${id}`);
+
+    const department = await executeApiCall(
+      () => getApiV1DepartmentById({ path: { id } }),
+      'Get department by ID'
     );
 
     return createToolResponse(department);

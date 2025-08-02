@@ -13,7 +13,6 @@ import {
   getApiV1RegionByIdDepartments,
 } from '../../client/generated/index.js';
 import { commonSchemas } from '../../utils/common/schemas.js';
-import { id } from 'zod/v4/locales';
 
 // Schema definitions
 const getApiV1RegionSchema = z.object({
@@ -63,7 +62,7 @@ const GET_REGION_BY_ID: Tool = {
         type: 'number',
         description: 'The ID of the region to retrieve.',
       },
-      required: [id],
+      required: ['id'],
     },
   },
 };
@@ -88,7 +87,7 @@ const GET_REGION_BY_ID_DEPARTMENTS: Tool = {
         description: 'Direction to sort the regions. Options: "asc", "desc"',
         enum: ['asc', 'desc'],
       },
-      required: [id],
+      required: ['id'],
     },
   },
 };
