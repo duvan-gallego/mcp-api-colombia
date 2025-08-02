@@ -1,5 +1,4 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { log } from './utils/helpers.js';
 import express, { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -10,6 +9,7 @@ import {
   JSONRPCNotification,
   LoggingMessageNotification,
 } from '@modelcontextprotocol/sdk/types.js';
+import { log } from './utils/common/logging.js';
 
 const SESSION_ID_HEADER_NAME = 'mcp-session-id';
 const JSON_RPC = '2.0';
@@ -25,7 +25,7 @@ export class MCPStreamableHttpServer {
   }
 
   async start() {
-    log('Starting MCP server using Streamable HTTP transport...');
+    log.info('Starting MCP server using Streamable HTTP transport...');
 
     const app = express();
     app.use(express.json());
@@ -49,19 +49,19 @@ export class MCPStreamableHttpServer {
 
     const PORT = process.env.MCP_PORT || process.env.PORT || 3000;
     app.listen(PORT, () => {
-      log(`MCP Streamable HTTP server running on port ${PORT}`);
-      log(`HTTP endpoint: http://localhost:${PORT}/mcp`);
+      log.info(`MCP Streamable HTTP server running on port ${PORT}`);
+      log.info(`HTTP endpoint: http://localhost:${PORT}/mcp`);
     });
 
     process.on('SIGINT', async () => {
-      log('Shutting down server...');
+      log.info('Shutting down server...');
       await this.cleanup();
       process.exit(0);
     });
   }
 
   async handleGetRequest(req: Request, res: Response) {
-    log('get request received');
+    log.info('get request received');
     // if server does not offer an SSE stream at this endpoint.
     // res.status(405).set('Allow', 'POST').send('Method Not Allowed')
 
@@ -71,7 +71,7 @@ export class MCPStreamableHttpServer {
       return;
     }
 
-    log(`Establishing SSE stream for session ${sessionId}`);
+    log.info(`Establishing SSE stream for session ${sessionId}`);
     const transport = this.transports[sessionId];
     await transport.handleRequest(req, res);
     await this.streamMessages(transport);
@@ -82,8 +82,8 @@ export class MCPStreamableHttpServer {
   async handlePostRequest(req: Request, res: Response) {
     const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
 
-    log('post request received');
-    log('body: ', req.body);
+    log.info('post request received');
+    log.info('body: ', req.body);
 
     let transport: StreamableHTTPServerTransport;
 
@@ -119,7 +119,7 @@ export class MCPStreamableHttpServer {
       res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
       return;
     } catch (error) {
-      log('Error handling MCP request:', error);
+      log.error(`Error handling MCP request: [${error}]`);
       res.status(500).json(this.createErrorResponse('Internal server error.'));
       return;
     }
@@ -152,7 +152,7 @@ export class MCPStreamableHttpServer {
         try {
           this.sendNotification(transport, message);
 
-          log(`Sent: ${data}`);
+          log.info(`Sent: ${data}`);
 
           if (messageCount === 2) {
             clearInterval(interval);
@@ -164,15 +164,15 @@ export class MCPStreamableHttpServer {
 
             this.sendNotification(transport, message);
 
-            log('Stream completed');
+            log.info('Stream completed');
           }
         } catch (error) {
-          log('Error sending message:', error);
+          log.error(`Error sending message: [${error}]`);
           clearInterval(interval);
         }
       }, 1000);
     } catch (error) {
-      log('Error sending message:', error);
+      log.error(`Error sending message: [${error}]`);
     }
   }
 
@@ -214,7 +214,7 @@ export class MCPStreamableHttpServer {
   }
 
   async stop() {
-    log('Stopping MCP Streamable HTTP server...');
+    log.info('Stopping MCP Streamable HTTP server...');
     await this.cleanup();
   }
 }
