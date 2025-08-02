@@ -1,6 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { REGION_HANDLERS, REGION_TOOLS } from './tools/region/index.js';
+import { REGION_HANDLERS, REGION_TOOLS } from './tools/region.js';
 import { version } from './utils/version.js';
 import { log } from './utils/helpers.js';
 
