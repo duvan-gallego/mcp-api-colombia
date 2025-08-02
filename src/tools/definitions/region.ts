@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ToolHandlers } from '../utils/types.js';
+import { ToolHandlers } from '../../utils/types.js';
 import {
   createToolResponse,
   executeApiCall,
   extractArguments,
   validateToolInput,
-} from '../utils/utils.js';
+} from '../../utils/utils.js';
 import {
   getApiV1Region,
   getApiV1RegionById,
   getApiV1RegionByIdDepartments,
-} from '../client/generated/index.js';
-import { commonSchemas } from '../utils/common/schemas.js';
+} from '../../client/generated/index.js';
+import { commonSchemas } from '../../utils/common/schemas.js';
 import { id } from 'zod/v4/locales';
 
 // Schema definitions

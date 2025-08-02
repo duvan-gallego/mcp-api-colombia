@@ -2,15 +2,16 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { version } from './utils/version.js';
 import { log } from './utils/helpers.js';
-import { COUNTRY_TOOLS, REGION_TOOLS } from './tools/tools.js';
-import { COUNTRY_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
+import { COUNTRY_TOOLS, DEPARTMENT_TOOLS, REGION_TOOLS } from './tools/tools.js';
+import { COUNTRY_HANDLERS, DEPARTMENT_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
 
 export const createServer = async (): Promise<Server> => {
-  const ALL_TOOLS = [...COUNTRY_TOOLS, ...REGION_TOOLS];
+  const ALL_TOOLS = [...COUNTRY_TOOLS, ...REGION_TOOLS, ...DEPARTMENT_TOOLS];
 
   const ALL_HANDLERS = {
     ...COUNTRY_HANDLERS,
     ...REGION_HANDLERS,
+    ...DEPARTMENT_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
