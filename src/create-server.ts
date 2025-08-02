@@ -1,13 +1,15 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { REGION_HANDLERS, REGION_TOOLS } from './tools/region.js';
 import { version } from './utils/version.js';
 import { log } from './utils/helpers.js';
+import { COUNTRY_TOOLS, REGION_TOOLS } from './tools/tools.js';
+import { COUNTRY_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
 
 export const createServer = async (): Promise<Server> => {
-  const ALL_TOOLS = [...REGION_TOOLS];
+  const ALL_TOOLS = [...COUNTRY_TOOLS, ...REGION_TOOLS];
 
   const ALL_HANDLERS = {
+    ...COUNTRY_HANDLERS,
     ...REGION_HANDLERS,
   };
 

@@ -18,7 +18,7 @@ export default [
       '@typescript-eslint': tseslint,
       prettier: prettierPlugin,
     },
-    
+
     rules: {
       // TypeScript recommended rules
       ...tseslint.configs.recommended.rules,
