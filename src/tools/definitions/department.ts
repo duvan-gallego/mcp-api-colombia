@@ -138,7 +138,8 @@ const SEARCH_DEPARTMENT_BY_KEYWORD: Tool = {
 
 const GET_DEPARTMENT_PAGINATED: Tool = {
   name: 'get-department-paginated',
-  description: 'Get a paginated list of departments in Colombia.',
+  description:
+    'Get a paginated list of departments in Colombia, using pagination including page, pageSize, total records and data',
   inputSchema: {
     type: 'object',
     properties: {
@@ -203,7 +204,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
 
     const department = await executeApiCall(
       () => getApiV1DepartmentByIdCities({ path: { id }, query: { sortBy, sortDirection } }),
-      `Get a list of cities filtered by department ID: ${id} with sortBy: ${sortBy}, sortDirection: ${sortDirection}`
+      'Get department by ID cities'
     );
 
     return createToolResponse(department);
@@ -220,7 +221,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
 
     const department = await executeApiCall(
       () => getApiV1DepartmentByIdNaturalareas({ path: { id }, query: { sortBy, sortDirection } }),
-      `Get a list of natural areas filtered by department ID: ${id} with sortBy: ${sortBy}, sortDirection: ${sortDirection}`
+      'Get department by ID natural areas'
     );
 
     return createToolResponse(department);
@@ -241,7 +242,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
           path: { id },
           query: { sortBy, sortDirection },
         }),
-      `Get a list of touristic attractions filtered by department ID: ${id} with sortBy: ${sortBy}, sortDirection: ${sortDirection}`
+      'Get department by ID touristic attractions'
     );
 
     return createToolResponse(department);
@@ -254,7 +255,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
 
     const department = await executeApiCall(
       () => getApiV1DepartmentNameByName({ path: { name } }),
-      `Get department by name: ${name}`
+      'Get department by name'
     );
 
     return createToolResponse(department);
@@ -271,7 +272,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
 
     const departments = await executeApiCall(
       () => getApiV1DepartmentSearchByKeyword({ path: { keyword } }),
-      `Search department by keyword: ${keyword}`
+      'Search department by keyword'
     );
 
     return createToolResponse(departments);
@@ -292,7 +293,7 @@ export const DEPARTMENT_HANDLERS: ToolHandlers = {
         getApiV1DepartmentPagedList({
           query: { Page: page, PageSize: pageSize, SortBy: sortBy, SortDirection: sortDirection },
         }),
-      `Get paginated departments with page: ${page}, pageSize: ${pageSize}, sortBy: ${sortBy}, sortDirection: ${sortDirection}`
+      'Get paginated departments'
     );
 
     return createToolResponse(departments);
