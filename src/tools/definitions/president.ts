@@ -170,7 +170,7 @@ export const PRESIDENT_HANDLERS: ToolHandlers = {
 
     // Validate input
     validateToolInput(
-      z.object({ year: z.number().int().min(1900).max(new Date().getFullYear()) }),
+      z.object({ year: z.number().int().min(1819).max(new Date().getFullYear()) }),
       { year },
       `Get president by year: ${year}`
     );
