@@ -5,15 +5,23 @@ import { log } from './utils/helpers.js';
 import { COUNTRY_TOOLS, DEPARTMENT_TOOLS, REGION_TOOLS } from './tools/tools.js';
 import { COUNTRY_HANDLERS, DEPARTMENT_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
 import { CITY_HANDLERS, CITY_TOOLS } from './tools/definitions/city.js';
+import { PRESIDENT_HANDLERS, PRESIDENT_TOOLS } from './tools/definitions/president.js';
 
 export const createServer = async (): Promise<Server> => {
-  const ALL_TOOLS = [...COUNTRY_TOOLS, ...REGION_TOOLS, ...DEPARTMENT_TOOLS, ...CITY_TOOLS];
+  const ALL_TOOLS = [
+    ...COUNTRY_TOOLS,
+    ...REGION_TOOLS,
+    ...DEPARTMENT_TOOLS,
+    ...CITY_TOOLS,
+    ...PRESIDENT_TOOLS,
+  ];
 
   const ALL_HANDLERS = {
     ...COUNTRY_HANDLERS,
     ...REGION_HANDLERS,
     ...DEPARTMENT_HANDLERS,
     ...CITY_HANDLERS,
+    ...PRESIDENT_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
