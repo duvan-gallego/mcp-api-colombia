@@ -4,9 +4,6 @@
   "description": "MCP Server for interacting with API-Colombia",
   "type": "module",
   "main": "dist/index.js",
-  "bin": {
-    "redis-cloud-api-mcp-tool": "dist/index.js"
-  },
   "files": [
     "dist"
   ],
