@@ -16,7 +16,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts",
+    "dev": "tsx --watch src/index.ts",
     "test": "vitest",
     "prepare": "rm -rf src/client && rm -rf dist && pnpm generate:api",
     "generate:api": "openapi-ts",
