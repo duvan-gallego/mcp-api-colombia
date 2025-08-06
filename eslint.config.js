@@ -12,7 +12,7 @@ export default [
       sourceType: 'module',
     },
 
-    ignores: ['node_modules/', 'dist/', 'src/client/**'],
+    ignores: ['node_modules/', 'dist/*', 'src/client/**'],
 
     plugins: {
       '@typescript-eslint': tseslint,

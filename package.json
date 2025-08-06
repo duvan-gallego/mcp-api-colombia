@@ -18,9 +18,9 @@
     "prepare": "rm -rf src/client && rm -rf dist && pnpm generate:api",
     "generate:api": "openapi-ts",
     "format:check": "prettier --check .",
-    "format:write": "prettier --write .",
-    "lint:check": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "keywords": [
     "mcp",
