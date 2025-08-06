@@ -6,6 +6,10 @@ import { COUNTRY_TOOLS, DEPARTMENT_TOOLS, REGION_TOOLS } from './tools/tools.js'
 import { COUNTRY_HANDLERS, DEPARTMENT_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
 import { CITY_HANDLERS, CITY_TOOLS } from './tools/definitions/city.js';
 import { PRESIDENT_HANDLERS, PRESIDENT_TOOLS } from './tools/definitions/president.js';
+import {
+  TOURISTIC_ATTRACTION_HANDLERS,
+  TOURISTIC_ATTRACTION_TOOLS,
+} from './tools/definitions/touristic-attractions.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -14,6 +18,7 @@ export const createServer = async (): Promise<Server> => {
     ...DEPARTMENT_TOOLS,
     ...CITY_TOOLS,
     ...PRESIDENT_TOOLS,
+    ...TOURISTIC_ATTRACTION_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -22,6 +27,7 @@ export const createServer = async (): Promise<Server> => {
     ...DEPARTMENT_HANDLERS,
     ...CITY_HANDLERS,
     ...PRESIDENT_HANDLERS,
+    ...TOURISTIC_ATTRACTION_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
