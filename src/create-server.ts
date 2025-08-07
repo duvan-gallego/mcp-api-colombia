@@ -14,6 +14,7 @@ import {
   CATEGORY_NATURAL_AREA_HANDLERS,
   CATEGORY_NATURAL_AREA_TOOLS,
 } from './tools/definitions/category-natural-area.js';
+import { NATURAL_AREA_HANDLERS, NATURAL_AREA_TOOLS } from './tools/definitions/natural-area.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -24,6 +25,7 @@ export const createServer = async (): Promise<Server> => {
     ...PRESIDENT_TOOLS,
     ...TOURISTIC_ATTRACTION_TOOLS,
     ...CATEGORY_NATURAL_AREA_TOOLS,
+    ...NATURAL_AREA_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -34,6 +36,7 @@ export const createServer = async (): Promise<Server> => {
     ...PRESIDENT_HANDLERS,
     ...TOURISTIC_ATTRACTION_HANDLERS,
     ...CATEGORY_NATURAL_AREA_HANDLERS,
+    ...NATURAL_AREA_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
