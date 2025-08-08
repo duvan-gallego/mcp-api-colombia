@@ -20,6 +20,10 @@ import {
   INVASIVE_SPECIE_HANDLERS,
   INVASIVE_SPECIE_TOOLS,
 } from './tools/definitions/invasive-specie.js';
+import {
+  NATIVE_COMMUNITY_HANDLERS,
+  NATIVE_COMMUNITY_TOOLS,
+} from './tools/definitions/native-community.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -33,6 +37,7 @@ export const createServer = async (): Promise<Server> => {
     ...NATURAL_AREA_TOOLS,
     ...MAP_TOOLS,
     ...INVASIVE_SPECIE_TOOLS,
+    ...NATIVE_COMMUNITY_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -46,6 +51,7 @@ export const createServer = async (): Promise<Server> => {
     ...NATURAL_AREA_HANDLERS,
     ...MAP_HANDLERS,
     ...INVASIVE_SPECIE_HANDLERS,
+    ...NATIVE_COMMUNITY_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
