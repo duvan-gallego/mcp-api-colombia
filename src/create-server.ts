@@ -16,6 +16,10 @@ import {
 } from './tools/definitions/category-natural-area.js';
 import { NATURAL_AREA_HANDLERS, NATURAL_AREA_TOOLS } from './tools/definitions/natural-area.js';
 import { MAP_HANDLERS, MAP_TOOLS } from './tools/definitions/map.js';
+import {
+  INVASIVE_SPECIE_HANDLERS,
+  INVASIVE_SPECIE_TOOLS,
+} from './tools/definitions/invasive-specie.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -28,6 +32,7 @@ export const createServer = async (): Promise<Server> => {
     ...CATEGORY_NATURAL_AREA_TOOLS,
     ...NATURAL_AREA_TOOLS,
     ...MAP_TOOLS,
+    ...INVASIVE_SPECIE_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -40,6 +45,7 @@ export const createServer = async (): Promise<Server> => {
     ...CATEGORY_NATURAL_AREA_HANDLERS,
     ...NATURAL_AREA_HANDLERS,
     ...MAP_HANDLERS,
+    ...INVASIVE_SPECIE_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
