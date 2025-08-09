@@ -13,11 +13,6 @@ import {
   getApiV1AirportNameByName,
   getApiV1AirportPagedList,
   getApiV1AirportSearchByKeyword,
-  getApiV1IndigenousReservation,
-  getApiV1IndigenousReservationById,
-  getApiV1IndigenousReservationNameByName,
-  getApiV1IndigenousReservationPagedList,
-  getApiV1IndigenousReservationSearchByKeyword,
 } from '../../client/generated/index.js';
 import {
   commonPageSchemaWithSort,
