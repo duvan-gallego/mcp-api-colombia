@@ -29,6 +29,10 @@ import {
   INDIGENOUS_RESERVATION_TOOLS,
 } from './tools/definitions/indigenous-reservation.js';
 import { AIRPORT_HANDLERS, AIRPORT_TOOLS } from './tools/definitions/airport.js';
+import {
+  CONSTITUTION_ARTICLE_HANDLERS,
+  CONSTITUTION_ARTICLE_TOOLS,
+} from './tools/definitions/constitution-article.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -45,6 +49,7 @@ export const createServer = async (): Promise<Server> => {
     ...NATIVE_COMMUNITY_TOOLS,
     ...INDIGENOUS_RESERVATION_TOOLS,
     ...AIRPORT_TOOLS,
+    ...CONSTITUTION_ARTICLE_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -61,6 +66,7 @@ export const createServer = async (): Promise<Server> => {
     ...NATIVE_COMMUNITY_HANDLERS,
     ...INDIGENOUS_RESERVATION_HANDLERS,
     ...AIRPORT_HANDLERS,
+    ...CONSTITUTION_ARTICLE_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
