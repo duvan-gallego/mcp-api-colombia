@@ -24,6 +24,10 @@ import {
   NATIVE_COMMUNITY_HANDLERS,
   NATIVE_COMMUNITY_TOOLS,
 } from './tools/definitions/native-community.js';
+import {
+  INDIGENOUS_RESERVATION_HANDLERS,
+  INDIGENOUS_RESERVATION_TOOLS,
+} from './tools/definitions/indigenous-reservation.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -38,6 +42,7 @@ export const createServer = async (): Promise<Server> => {
     ...MAP_TOOLS,
     ...INVASIVE_SPECIE_TOOLS,
     ...NATIVE_COMMUNITY_TOOLS,
+    ...INDIGENOUS_RESERVATION_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -52,6 +57,7 @@ export const createServer = async (): Promise<Server> => {
     ...MAP_HANDLERS,
     ...INVASIVE_SPECIE_HANDLERS,
     ...NATIVE_COMMUNITY_HANDLERS,
+    ...INDIGENOUS_RESERVATION_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
