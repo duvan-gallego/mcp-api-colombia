@@ -9,6 +9,7 @@ import {
 } from '../../utils/utils.js';
 import {
   getApiV1ConstitutionArticle,
+  getApiV1ConstitutionArticleByChapterNumberByChapternumber,
   getApiV1ConstitutionArticleById,
   getApiV1ConstitutionArticlePagedList,
   getApiV1ConstitutionArticleSearchByKeyword,
@@ -80,11 +81,27 @@ const GET_CONSTITUTION_ARTICLE_PAGINATED: Tool = {
   },
 };
 
+const GET_CONSTITUTION_ARTICLE_BY_CHAPTER_NUMBER: Tool = {
+  name: 'get-constitution-article-by-chapter-number',
+  description: 'Get a specific Constitution Article information by its chapter number.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      chapterNumber: {
+        type: 'number',
+        description: 'The chapter number of the Constitution Article to retrieve.',
+      },
+      required: ['chapterNumber'],
+    },
+  },
+};
+
 export const CONSTITUTION_ARTICLE_TOOLS = [
   GET_CONSTITUTION_ARTICLES,
   GET_CONSTITUTION_ARTICLE_BY_ID,
   SEARCH_CONSTITUTION_ARTICLE_BY_KEYWORD,
   GET_CONSTITUTION_ARTICLE_PAGINATED,
+  GET_CONSTITUTION_ARTICLE_BY_CHAPTER_NUMBER,
 ];
 
 export const CONSTITUTION_ARTICLE_HANDLERS: ToolHandlers = {
@@ -155,5 +172,25 @@ export const CONSTITUTION_ARTICLE_HANDLERS: ToolHandlers = {
     );
 
     return createToolResponse(constitutionArticles);
+  },
+  'get-constitution-article-by-chapter-number': async (request) => {
+    const { chapterNumber } = extractArguments<{ chapterNumber: number }>(request);
+
+    // Validate input
+    validateToolInput(
+      commonRequiredIdSchema,
+      { chapterNumber },
+      `Get constitution article by chapter number: ${chapterNumber}`
+    );
+
+    const constitutionArticle = await executeApiCall(
+      () =>
+        getApiV1ConstitutionArticleByChapterNumberByChapternumber({
+          path: { chapternumber: chapterNumber },
+        }),
+      'Get constitution article by chapter number'
+    );
+
+    return createToolResponse(constitutionArticle);
   },
 };
