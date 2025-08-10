@@ -33,6 +33,7 @@ import {
   CONSTITUTION_ARTICLE_HANDLERS,
   CONSTITUTION_ARTICLE_TOOLS,
 } from './tools/definitions/constitution-article.js';
+import { RADIO_HANDLERS, RADIO_TOOLS } from './tools/definitions/radio.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -50,6 +51,7 @@ export const createServer = async (): Promise<Server> => {
     ...INDIGENOUS_RESERVATION_TOOLS,
     ...AIRPORT_TOOLS,
     ...CONSTITUTION_ARTICLE_TOOLS,
+    ...RADIO_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -67,6 +69,7 @@ export const createServer = async (): Promise<Server> => {
     ...INDIGENOUS_RESERVATION_HANDLERS,
     ...AIRPORT_HANDLERS,
     ...CONSTITUTION_ARTICLE_HANDLERS,
+    ...RADIO_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
