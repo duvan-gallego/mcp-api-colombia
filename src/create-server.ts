@@ -35,6 +35,7 @@ import {
 } from './tools/definitions/constitution-article.js';
 import { RADIO_HANDLERS, RADIO_TOOLS } from './tools/definitions/radio.js';
 import { HOLIDAY_HANDLERS, HOLIDAY_TOOLS } from './tools/definitions/holiday.js';
+import { TYPICAL_DISH_HANDLERS, TYPICAL_DISH_TOOLS } from './tools/definitions/typical-dish.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -54,6 +55,7 @@ export const createServer = async (): Promise<Server> => {
     ...CONSTITUTION_ARTICLE_TOOLS,
     ...RADIO_TOOLS,
     ...HOLIDAY_TOOLS,
+    ...TYPICAL_DISH_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -73,6 +75,7 @@ export const createServer = async (): Promise<Server> => {
     ...CONSTITUTION_ARTICLE_HANDLERS,
     ...RADIO_HANDLERS,
     ...HOLIDAY_HANDLERS,
+    ...TYPICAL_DISH_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
