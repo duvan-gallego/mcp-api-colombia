@@ -36,6 +36,10 @@ import {
 import { RADIO_HANDLERS, RADIO_TOOLS } from './tools/definitions/radio.js';
 import { HOLIDAY_HANDLERS, HOLIDAY_TOOLS } from './tools/definitions/holiday.js';
 import { TYPICAL_DISH_HANDLERS, TYPICAL_DISH_TOOLS } from './tools/definitions/typical-dish.js';
+import {
+  TRADITIONAL_FAIR_AND_FESTIVAL_HANDLERS,
+  TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
+} from './tools/definitions/traditional-fair-and-festival.js';
 
 export const createServer = async (): Promise<Server> => {
   const ALL_TOOLS = [
@@ -56,6 +60,7 @@ export const createServer = async (): Promise<Server> => {
     ...RADIO_TOOLS,
     ...HOLIDAY_TOOLS,
     ...TYPICAL_DISH_TOOLS,
+    ...TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
   ];
 
   const ALL_HANDLERS = {
@@ -76,6 +81,7 @@ export const createServer = async (): Promise<Server> => {
     ...RADIO_HANDLERS,
     ...HOLIDAY_HANDLERS,
     ...TYPICAL_DISH_HANDLERS,
+    ...TRADITIONAL_FAIR_AND_FESTIVAL_HANDLERS,
   };
 
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
