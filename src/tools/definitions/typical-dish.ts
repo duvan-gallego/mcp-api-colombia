@@ -157,7 +157,7 @@ export const TYPICAL_DISH_HANDLERS: ToolHandlers = {
 
     return createToolResponse(typicalDish);
   },
-  'get-typical-dish-by-id-departments': async (request) => {
+  'get-typical-dish-by-id-department': async (request) => {
     const { id, sortBy, sortDirection } = extractArguments<SortOptionsWithRequiredId>(request);
 
     // Validate input
