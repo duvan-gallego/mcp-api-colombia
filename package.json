@@ -11,7 +11,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "pnpm prepare && tsc",
     "start": "node dist/index.js",
     "dev": "tsx --watch src/index.ts",
     "test": "vitest",
@@ -20,7 +20,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "deploy": "wrangler deploy"
   },
   "keywords": [
     "mcp",
@@ -31,13 +32,13 @@
   "dependencies": {
     "@hey-api/client-fetch": "^0.13.1",
     "@modelcontextprotocol/sdk": "^1.15.0",
-    "zod": "^3.25.74",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "zod": "^3.25.74"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
     "@eslint/js": "^9.30.1",
     "@hey-api/openapi-ts": "^0.78.1",
+    "@types/express": "^5.0.1",
     "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
@@ -51,6 +52,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.29.0"
   }
 }
