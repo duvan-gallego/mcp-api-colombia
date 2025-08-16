@@ -39,6 +39,7 @@ pnpm build
 ```
 pnpm start --sse
 ```
+
 2. Start the MCP inspector
 
 ```
@@ -50,5 +51,5 @@ npx @modelcontextprotocol/inspector
    <img width="1197" height="764" alt="image" src="https://github.com/user-attachments/assets/739afeaf-ba07-4e98-9b85-0ef2458151b4" />
 
 ## License
-MIT License
 
+MIT License
