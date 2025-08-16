@@ -22,19 +22,14 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm ci
+        run: pnpm install --frozen-lockfile
 
+      # TODO: Enable the test step once tests are implemented or ready to run
       # - name: Run tests
       #   run: pnpm test:run
 
       - name: Run TypeScript type checking
         run: pnpm type-check
-
-      - name: Run ESLint and fix
-        run: pnpm lint:fix
-
-      - name: Format with Prettier
-        run: pnpm format
 
       - name: Check for remaining ESLint errors
         run: pnpm lint
