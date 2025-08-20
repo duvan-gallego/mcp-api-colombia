@@ -72,10 +72,15 @@ npx @modelcontextprotocol/inspector
 }
 ```
 
-5. Check that you can see all the available tools and start interacting with them
+5. Check that you can see all the available tools, enable and start interacting with them
 
-Note: Note: Since this model is a small one and only has a context length of 32,768, you can't load all the tools at once, and because of that you will need to only load the ones you will work with. With bigger models that support a bigger context length, that's not a problem.
+<img width="1706" height="1406" alt="image" src="https://github.com/user-attachments/assets/4335f9f0-6508-4844-aa22-eae3bf33958b" />
 
+
+<img width="1711" height="1410" alt="image" src="https://github.com/user-attachments/assets/3ac541ef-ff40-4f6b-a527-daf1710f55c9" />
+
+
+Note: Since Qwen3 4B is a small model and only has a context length of 32,768, you can't load all the tools at once, and because of that you will need to only load the ones you will work with. When using bigger models that support a bigger context length, that's not a problem.
 
 ## License
 
