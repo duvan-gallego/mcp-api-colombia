@@ -19,7 +19,7 @@ export async function main() {
   log('Starting MCP server...');
   // Determine transport type
   const transportType =
-    process.env.MCP_TRANSPORT || (process.argv.includes('--sse') ? 'sse' : 'stdio');
+    process.env.MCP_TRANSPORT || (process.argv.includes('--stdio') ? 'stdio' : 'sse');
 
   const server = await createServer();
 
