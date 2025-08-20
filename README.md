@@ -60,7 +60,7 @@ npx @modelcontextprotocol/inspector
  pnpm build && pnpm start
 ```
 
-4. Add the following configuration in the LM Studio `mcp.json` file. You can find more info about this [here](https://lmstudio.ai/blog/lmstudio-v0.3.17)
+4. Add the MCP configuration in LM Studio, putting the following text in the `mcp.json` file or clicking the Add to LM studio button. You can find more info about this [here](https://lmstudio.ai/blog/lmstudio-v0.3.17)
 
 ```
 {
@@ -71,6 +71,8 @@ npx @modelcontextprotocol/inspector
   }
 }
 ```
+
+[![Add MCP Server mcp-api-colombia to LM Studio](https://files.lmstudio.ai/deeplink/mcp-install-light.svg)](https://lmstudio.ai/install-mcp?name=mcp-api-colombia&config=eyJ1cmwiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAvbWNwIn0%3D)
 
 5. Check that you can see all the available tools, enable and start interacting with them
 
