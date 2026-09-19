@@ -1,6 +1,6 @@
 # Api Colombia MCP Server
 
-The Model Context Protocol (MCP) is a standardized protocol for managing context between large language models (LLMs) and external systems. This repository provides an MCP Server for the [api-colombia](https://api-colombia.com/) API, allowing you to use the API throught natural language. This MCP server supports the transport types STDIO and Streamable HTTP.
+The Model Context Protocol (MCP) is a standardized protocol for managing context between large language models (LLMs) and external systems. This repository provides an MCP Server for the [api-colombia](https://api-colombia.com/) API, allowing you to use the API through natural language. This MCP server supports the transport types STDIO and Streamable HTTP.
 
 # Api Colombia
 
