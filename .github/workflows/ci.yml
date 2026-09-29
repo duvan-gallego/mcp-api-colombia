@@ -24,9 +24,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # TODO: Enable the test step once tests are implemented or ready to run
-      # - name: Run tests
-      #   run: pnpm test:run
+      - name: Run tests
+        run: pnpm test --run
 
       - name: Run TypeScript type checking
         run: pnpm type-check
