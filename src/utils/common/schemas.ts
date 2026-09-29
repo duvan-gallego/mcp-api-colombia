@@ -1,17 +1,12 @@
+import { CallToolResult } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 export const emptySchema = {
   type: 'object',
   properties: {},
 } as const;
 
-export interface ToolResponse {
-  content: Array<{ type: string; text: string }>;
-  isError?: boolean;
-  _meta?: Record<string, unknown>;
-  [key: string]: unknown;
-}
+export type ToolResponse = CallToolResult;
 
 // Schema definitions
 
@@ -43,4 +38,8 @@ export const commonPageSchemaWithSort = z.object({
   sortDirection: commonSchemas.sortDirection,
 });
 
-export type ToolRequest = z.infer<typeof CallToolRequestSchema>;
+export type ToolRequest = {
+  params: {
+    arguments?: Record<string, unknown>;
+  };
+};

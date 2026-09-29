@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { Server as HttpServer } from 'node:http';
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { InitializeRequestSchema, JSONRPCError } from '@modelcontextprotocol/sdk/types.js';
+import { InitializeRequestSchema } from '@modelcontextprotocol/core';
+import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
+import { McpServer, JSONRPCErrorResponse, validateHostHeader } from '@modelcontextprotocol/server';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { log } from './utils/common/logging.js';
 
@@ -12,11 +12,11 @@ const DEFAULT_PORT = 3000;
 const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000;
 const MAX_REQUEST_BODY_SIZE = '1mb';
 
-type ServerFactory = () => Promise<Server>;
+type ServerFactory = () => Promise<McpServer>;
 
 type McpSession = {
-  server: Server;
-  transport: StreamableHTTPServerTransport;
+  server: McpServer;
+  transport: NodeStreamableHTTPServerTransport;
   lastAccessedAt: number;
 };
 
@@ -71,6 +71,10 @@ export function isAllowedOrigin(origin: string | undefined): boolean {
   }
 }
 
+function isAllowedHost(host: string | undefined): boolean {
+  return validateHostHeader(host, ['localhost', '127.0.0.1', '[::1]']).ok;
+}
+
 function isPayloadTooLargeError(error: unknown): boolean {
   return (
     typeof error === 'object' &&
@@ -89,13 +93,24 @@ export class MCPStreamableHttpServer {
     private readonly sessionTtlMs = getSessionTtlMs()
   ) {}
 
-  createApp(port = getPort()): Express {
+  createApp(): Express {
     const app = express();
 
     app.use((req, res, next) => {
       const requestId = req.get('x-request-id') || randomUUID();
       res.locals.requestId = requestId;
       res.set('x-request-id', requestId);
+      next();
+    });
+    app.use((req, res, next) => {
+      if (!isAllowedHost(req.get('host'))) {
+        log.warn('Rejected request with invalid Host header', {
+          requestId: res.locals.requestId as string,
+          host: req.get('host'),
+        });
+        this.sendError(res, 403, 'Forbidden: invalid Host header.');
+        return;
+      }
       next();
     });
     app.use((req, res, next) => {
@@ -112,7 +127,7 @@ export class MCPStreamableHttpServer {
     app.use(express.json({ limit: MAX_REQUEST_BODY_SIZE }));
 
     app.post(MCP_ENDPOINT, async (req, res) => {
-      await this.handlePostRequest(req, res, port);
+      await this.handlePostRequest(req, res);
     });
     app.delete(MCP_ENDPOINT, async (req, res) => {
       await this.handleDeleteRequest(req, res);
@@ -133,7 +148,7 @@ export class MCPStreamableHttpServer {
 
   async start(): Promise<void> {
     const port = getPort();
-    const app = this.createApp(port);
+    const app = this.createApp();
 
     log.info('Starting MCP server using Streamable HTTP transport...');
     this.httpServer = await new Promise<HttpServer>((resolve, reject) => {
@@ -152,7 +167,7 @@ export class MCPStreamableHttpServer {
     process.once('SIGTERM', shutdown);
   }
 
-  private async handlePostRequest(req: Request, res: Response, port: number): Promise<void> {
+  private async handlePostRequest(req: Request, res: Response): Promise<void> {
     const sessionId = req.get(SESSION_ID_HEADER_NAME);
     const requestId = res.locals.requestId as string;
 
@@ -175,7 +190,7 @@ export class MCPStreamableHttpServer {
       }
 
       log.info('Initializing MCP session', { requestId });
-      await this.createSession(req, res, port);
+      await this.createSession(req, res);
     } catch (error) {
       log.error('Error handling MCP request', { requestId, sessionId, error: String(error) });
       if (!res.headersSent) {
@@ -203,17 +218,15 @@ export class MCPStreamableHttpServer {
     await this.closeSession(sessionId);
   }
 
-  private async createSession(req: Request, res: Response, port: number): Promise<void> {
+  private async createSession(req: Request, res: Response): Promise<void> {
     const server = await this.createServer();
     let sessionId: string | undefined;
-    const transport = new StreamableHTTPServerTransport({
+    const transport = new NodeStreamableHTTPServerTransport({
       sessionIdGenerator: randomUUID,
       onsessioninitialized: (id) => {
         sessionId = id;
         this.sessions.set(id, { server, transport, lastAccessedAt: Date.now() });
       },
-      allowedHosts: [`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`],
-      enableDnsRebindingProtection: true,
     });
 
     transport.onclose = () => {
@@ -258,7 +271,7 @@ export class MCPStreamableHttpServer {
   }
 
   private sendError(res: Response, status: number, message: string): void {
-    const error: JSONRPCError = {
+    const error: JSONRPCErrorResponse = {
       jsonrpc: '2.0',
       error: { code: -32000, message },
       id: randomUUID(),

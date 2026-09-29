@@ -1,5 +1,5 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { McpServer, Tool } from '@modelcontextprotocol/server';
+import { z } from 'zod';
 import { version } from './utils/version.js';
 import { log } from './utils/common/logging.js';
 import { COUNTRY_TOOLS, DEPARTMENT_TOOLS, REGION_TOOLS } from './tools/tools.js';
@@ -64,7 +64,31 @@ export const getAllTools = () =>
     ...TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
   ].map(normalizeTool);
 
-export const createServer = async (): Promise<Server> => {
+function createInputSchema(tool: Tool) {
+  const inputSchema = tool.inputSchema as {
+    properties?: Record<string, { type?: string; enum?: string[]; description?: string }>;
+    required?: string[];
+  };
+  const required = new Set(inputSchema.required);
+  const shape = Object.fromEntries(
+    Object.entries(inputSchema.properties ?? {}).map(([name, property]) => {
+      let schema: z.ZodType = property.enum?.length
+        ? z.enum(property.enum as [string, ...string[]])
+        : property.type === 'number'
+          ? z.number()
+          : z.string();
+
+      if (property.description) {
+        schema = schema.describe(property.description);
+      }
+      return [name, required.has(name) ? schema : schema.optional()];
+    })
+  );
+
+  return z.object(shape).strict();
+}
+
+export const createServer = async (): Promise<McpServer> => {
   const ALL_TOOLS = getAllTools();
 
   const ALL_HANDLERS = {
@@ -88,36 +112,39 @@ export const createServer = async (): Promise<Server> => {
     ...TRADITIONAL_FAIR_AND_FESTIVAL_HANDLERS,
   };
 
-  const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
+  const server = new McpServer({ name: 'mcp-api-colombia', version });
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    log.debug('Received list tools request');
-    return { tools: ALL_TOOLS };
-  });
+  for (const tool of ALL_TOOLS) {
+    const handler = ALL_HANDLERS[tool.name];
+    server.registerTool(
+      tool.name,
+      {
+        description: tool.description,
+        inputSchema: createInputSchema(tool),
+      },
+      async (arguments_) => {
+        log.info('Received tool call', { toolName: tool.name });
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const toolName = request.params.name;
-    log.info('Received tool call', { toolName });
-
-    try {
-      const handler = ALL_HANDLERS[toolName];
-      if (!handler) {
-        throw new Error(`Unknown tool: ${toolName}`);
+        try {
+          if (!handler) {
+            throw new Error(`Unknown tool: ${tool.name}`);
+          }
+          return await handler({ params: { arguments: arguments_ } });
+        } catch (error) {
+          log.error('Error handling tool call', { toolName: tool.name, error: String(error) });
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+              },
+            ],
+            isError: true,
+          };
+        }
       }
-      return await handler(request);
-    } catch (error) {
-      log.error('Error handling tool call', { toolName, error: String(error) });
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          },
-        ],
-        isError: true,
-      };
-    }
-  });
+    );
+  }
 
   return server;
 };

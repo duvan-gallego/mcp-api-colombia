@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { Tool } from '@modelcontextprotocol/server';
 import { PageWithSortOptions, SortOptions, ToolHandlers } from '../../utils/types.js';
 import { pageProperties, sortProperties } from '../../utils/common/tools-properties.js';
 import {
