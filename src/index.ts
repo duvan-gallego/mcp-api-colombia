@@ -19,12 +19,9 @@ process.on('unhandledRejection', (error) => {
 export async function main() {
   log.info('Starting MCP server...');
   const transport = resolveTransport(process.env.MCP_TRANSPORT, process.argv);
-  if (transport.usesLegacyAlias) {
-    log.warn('MCP_TRANSPORT=sse is deprecated; use MCP_TRANSPORT=streamable-http instead.');
-  }
 
   const mcpServer =
-    transport.type === 'streamable-http'
+    transport === 'streamable-http'
       ? new MCPStreamableHttpServer(createServer)
       : new MCPStdioServer(await createServer());
   await mcpServer.start();
