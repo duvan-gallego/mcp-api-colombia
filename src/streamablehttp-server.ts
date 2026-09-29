@@ -1,219 +1,274 @@
+import { randomUUID } from 'node:crypto';
+import { Server as HttpServer } from 'node:http';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import express, { Request, Response } from 'express';
-import { randomUUID } from 'crypto';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import {
-  Notification,
-  InitializeRequestSchema,
-  JSONRPCError,
-  JSONRPCNotification,
-  LoggingMessageNotification,
-} from '@modelcontextprotocol/sdk/types.js';
+import { InitializeRequestSchema, JSONRPCError } from '@modelcontextprotocol/sdk/types.js';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import { log } from './utils/common/logging.js';
 
+const MCP_ENDPOINT = '/mcp';
 const SESSION_ID_HEADER_NAME = 'mcp-session-id';
-const JSON_RPC = '2.0';
+const DEFAULT_PORT = 3000;
+const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000;
+const MAX_REQUEST_BODY_SIZE = '1mb';
 
-export class MCPStreamableHttpServer {
+type ServerFactory = () => Promise<Server>;
+
+type McpSession = {
   server: Server;
+  transport: StreamableHTTPServerTransport;
+  lastAccessedAt: number;
+};
 
-  // to support multiple simultaneous connections
-  transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
-
-  constructor(server: Server) {
-    this.server = server;
+function getPort(): number {
+  const configuredPort = process.env.MCP_PORT || process.env.PORT;
+  if (!configuredPort) {
+    return DEFAULT_PORT;
   }
 
-  async start() {
-    log.info('Starting MCP server using Streamable HTTP transport...');
+  const port = Number(configuredPort);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('MCP_PORT must be an integer between 1 and 65535.');
+  }
 
+  return port;
+}
+
+function getSessionTtlMs(): number {
+  const configuredTtl = process.env.MCP_SESSION_TTL_MS;
+  if (!configuredTtl) {
+    return DEFAULT_SESSION_TTL_MS;
+  }
+
+  const ttl = Number(configuredTtl);
+  if (!Number.isInteger(ttl) || ttl < 1) {
+    throw new Error('MCP_SESSION_TTL_MS must be a positive integer.');
+  }
+
+  return ttl;
+}
+
+export function isAllowedOrigin(origin: string | undefined): boolean {
+  if (!origin) {
+    return true;
+  }
+
+  const configuredOrigins = process.env.MCP_ALLOWED_ORIGINS?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (configuredOrigins?.length) {
+    return configuredOrigins.includes(origin);
+  }
+
+  try {
+    const url = new URL(origin);
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isPayloadTooLargeError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    error.type === 'entity.too.large'
+  );
+}
+
+export class MCPStreamableHttpServer {
+  private readonly sessions = new Map<string, McpSession>();
+  private httpServer?: HttpServer;
+
+  constructor(
+    private readonly createServer: ServerFactory,
+    private readonly sessionTtlMs = getSessionTtlMs()
+  ) {}
+
+  createApp(port = getPort()): Express {
     const app = express();
-    app.use(express.json());
 
-    const router = express.Router();
+    app.use((req, res, next) => {
+      if (!isAllowedOrigin(req.get('origin'))) {
+        this.sendError(res, 403, 'Forbidden: invalid Origin header.');
+        return;
+      }
+      next();
+    });
+    app.use(express.json({ limit: MAX_REQUEST_BODY_SIZE }));
 
-    // endpoint for the client to use for sending messages
-    const MCP_ENDPOINT = '/mcp';
-
-    // handler
-    router.post(MCP_ENDPOINT, async (req: Request, res: Response) => {
-      await this.handlePostRequest(req, res);
+    app.post(MCP_ENDPOINT, async (req, res) => {
+      await this.handlePostRequest(req, res, port);
+    });
+    app.delete(MCP_ENDPOINT, async (req, res) => {
+      await this.handleDeleteRequest(req, res);
+    });
+    app.get(MCP_ENDPOINT, (_req, res) => {
+      res.status(405).set('Allow', 'POST, DELETE').end();
+    });
+    app.use((error: unknown, _req: Request, res: Response, next: NextFunction) => {
+      if (isPayloadTooLargeError(error)) {
+        this.sendError(res, 413, 'Payload too large.');
+        return;
+      }
+      next(error);
     });
 
-    // Handle GET requests for SSE streams (using built-in support from StreamableHTTP)
-    router.get(MCP_ENDPOINT, async (req: Request, res: Response) => {
-      await this.handleGetRequest(req, res);
+    return app;
+  }
+
+  async start(): Promise<void> {
+    const port = getPort();
+    const app = this.createApp(port);
+
+    log.info('Starting MCP server using Streamable HTTP transport...');
+    this.httpServer = await new Promise<HttpServer>((resolve, reject) => {
+      const server = app.listen(port, '127.0.0.1', () => resolve(server));
+      server.once('error', reject);
     });
 
-    app.use('/', router);
+    log.info(`MCP Streamable HTTP server running on http://127.0.0.1:${port}${MCP_ENDPOINT}`);
 
-    const PORT = process.env.MCP_PORT || process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      log.info(`MCP Streamable HTTP server running on port ${PORT}`);
-      log.info(`HTTP endpoint: http://localhost:${PORT}/mcp`);
-    });
-
-    process.on('SIGINT', async () => {
+    const shutdown = async () => {
       log.info('Shutting down server...');
       await this.cleanup();
       process.exit(0);
-    });
-  }
-
-  async handleGetRequest(req: Request, res: Response) {
-    log.info('get request received');
-    // if server does not offer an SSE stream at this endpoint.
-    // res.status(405).set('Allow', 'POST').send('Method Not Allowed')
-
-    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
-    if (!sessionId || !this.transports[sessionId]) {
-      res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
-      return;
-    }
-
-    log.info(`Establishing SSE stream for session ${sessionId}`);
-    const transport = this.transports[sessionId];
-    await transport.handleRequest(req, res);
-    await this.streamMessages(transport);
-
-    return;
-  }
-
-  async handlePostRequest(req: Request, res: Response) {
-    const sessionId = req.headers[SESSION_ID_HEADER_NAME] as string | undefined;
-
-    log.info('post request received');
-    log.info('body: ', req.body);
-
-    let transport: StreamableHTTPServerTransport;
-
-    try {
-      // reuse existing transport
-      if (sessionId && this.transports[sessionId]) {
-        transport = this.transports[sessionId];
-        await transport.handleRequest(req, res, req.body);
-        return;
-      }
-
-      // create new transport
-      if (!sessionId && this.isInitializeRequest(req.body)) {
-        const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID(),
-          // for stateless mode:
-          // sessionIdGenerator: () => undefined
-        });
-
-        await this.server.connect(transport);
-        await transport.handleRequest(req, res, req.body);
-
-        // session ID will only be available (if in not Stateless-Mode)
-        // after handling the first request
-        const sessionId = transport.sessionId;
-        if (sessionId) {
-          this.transports[sessionId] = transport;
-        }
-
-        return;
-      }
-
-      res.status(400).json(this.createErrorResponse('Bad Request: invalid session ID or method.'));
-      return;
-    } catch (error) {
-      log.error(`Error handling MCP request: [${error}]`);
-      res.status(500).json(this.createErrorResponse('Internal server error.'));
-      return;
-    }
-  }
-
-  // send message streaming message every second
-  // cannot use server.sendLoggingMessage because we have can have multiple transports
-  private async streamMessages(transport: StreamableHTTPServerTransport) {
-    try {
-      // based on LoggingMessageNotificationSchema to trigger setNotificationHandler on client
-      const message: LoggingMessageNotification = {
-        method: 'notifications/message',
-        params: { level: 'info', data: 'SSE Connection established' },
-      };
-
-      this.sendNotification(transport, message);
-
-      let messageCount = 0;
-
-      const interval = setInterval(async () => {
-        messageCount++;
-
-        const data = `Message ${messageCount} at ${new Date().toISOString()}`;
-
-        const message: LoggingMessageNotification = {
-          method: 'notifications/message',
-          params: { level: 'info', data: data },
-        };
-
-        try {
-          this.sendNotification(transport, message);
-
-          log.info(`Sent: ${data}`);
-
-          if (messageCount === 2) {
-            clearInterval(interval);
-
-            const message: LoggingMessageNotification = {
-              method: 'notifications/message',
-              params: { level: 'info', data: 'Streaming complete!' },
-            };
-
-            this.sendNotification(transport, message);
-
-            log.info('Stream completed');
-          }
-        } catch (error) {
-          log.error(`Error sending message: [${error}]`);
-          clearInterval(interval);
-        }
-      }, 1000);
-    } catch (error) {
-      log.error(`Error sending message: [${error}]`);
-    }
-  }
-
-  async cleanup() {
-    await this.server.close();
-  }
-
-  private async sendNotification(
-    transport: StreamableHTTPServerTransport,
-    notification: Notification
-  ) {
-    const rpcNotification: JSONRPCNotification = {
-      ...notification,
-      jsonrpc: JSON_RPC,
     };
-    await transport.send(rpcNotification);
+    process.once('SIGINT', shutdown);
+    process.once('SIGTERM', shutdown);
   }
 
-  private createErrorResponse(message: string): JSONRPCError {
-    return {
-      jsonrpc: JSON_RPC,
-      error: {
-        code: -32000,
-        message: message,
+  private async handlePostRequest(req: Request, res: Response, port: number): Promise<void> {
+    const sessionId = req.get(SESSION_ID_HEADER_NAME);
+
+    try {
+      if (sessionId) {
+        const session = await this.getSession(sessionId);
+        if (!session) {
+          this.sendError(res, 404, 'Session not found.');
+          return;
+        }
+
+        await session.transport.handleRequest(req, res, req.body);
+        return;
+      }
+
+      if (!this.isInitializeRequest(req.body)) {
+        this.sendError(res, 400, 'Bad Request: initialize before sending requests.');
+        return;
+      }
+
+      await this.createSession(req, res, port);
+    } catch (error) {
+      log.error('Error handling MCP request', { error: String(error) });
+      if (!res.headersSent) {
+        this.sendError(res, 500, 'Internal server error.');
+      }
+    }
+  }
+
+  private async handleDeleteRequest(req: Request, res: Response): Promise<void> {
+    const sessionId = req.get(SESSION_ID_HEADER_NAME);
+    if (!sessionId) {
+      this.sendError(res, 400, 'Bad Request: missing MCP-Session-Id header.');
+      return;
+    }
+
+    const session = await this.getSession(sessionId);
+    if (!session) {
+      this.sendError(res, 404, 'Session not found.');
+      return;
+    }
+
+    await session.transport.handleRequest(req, res);
+    await this.closeSession(sessionId);
+  }
+
+  private async createSession(req: Request, res: Response, port: number): Promise<void> {
+    const server = await this.createServer();
+    let sessionId: string | undefined;
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: randomUUID,
+      onsessioninitialized: (id) => {
+        sessionId = id;
+        this.sessions.set(id, { server, transport, lastAccessedAt: Date.now() });
       },
+      allowedHosts: [`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`],
+      enableDnsRebindingProtection: true,
+    });
+
+    transport.onclose = () => {
+      if (sessionId) {
+        void this.closeSession(sessionId);
+      }
+    };
+
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+
+    if (!sessionId) {
+      await server.close();
+    }
+  }
+
+  private async getSession(sessionId: string): Promise<McpSession | undefined> {
+    await this.expireSessions();
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.lastAccessedAt = Date.now();
+    }
+    return session;
+  }
+
+  private async expireSessions(): Promise<void> {
+    const now = Date.now();
+    const expiredSessionIds = [...this.sessions].flatMap(([sessionId, session]) =>
+      now - session.lastAccessedAt >= this.sessionTtlMs ? [sessionId] : []
+    );
+    await Promise.all(expiredSessionIds.map((sessionId) => this.closeSession(sessionId)));
+  }
+
+  private async closeSession(sessionId: string): Promise<void> {
+    const session = this.sessions.get(sessionId);
+    if (!session) {
+      return;
+    }
+
+    this.sessions.delete(sessionId);
+    await Promise.allSettled([session.transport.close(), session.server.close()]);
+  }
+
+  private sendError(res: Response, status: number, message: string): void {
+    const error: JSONRPCError = {
+      jsonrpc: '2.0',
+      error: { code: -32000, message },
       id: randomUUID(),
     };
+    res.status(status).json(error);
   }
 
-  private isInitializeRequest(body: any): boolean {
-    const isInitial = (data: any) => {
-      const result = InitializeRequestSchema.safeParse(data);
-      return result.success;
-    };
+  private isInitializeRequest(body: unknown): boolean {
     if (Array.isArray(body)) {
-      return body.some((request) => isInitial(request));
+      return body.some((request) => InitializeRequestSchema.safeParse(request).success);
     }
-    return isInitial(body);
+    return InitializeRequestSchema.safeParse(body).success;
   }
 
-  async stop() {
+  async cleanup(): Promise<void> {
+    await Promise.all([...this.sessions.keys()].map((sessionId) => this.closeSession(sessionId)));
+    if (this.httpServer) {
+      await new Promise<void>((resolve, reject) => {
+        this.httpServer?.close((error) => (error ? reject(error) : resolve()));
+      });
+      this.httpServer = undefined;
+    }
+  }
+
+  async stop(): Promise<void> {
     log.info('Stopping MCP Streamable HTTP server...');
     await this.cleanup();
   }
