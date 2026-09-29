@@ -13,12 +13,6 @@ import {
   validateToolInput,
 } from '../../utils/utils.js';
 import {
-  getApiV1Department,
-  getApiV1DepartmentById,
-  getApiV1DepartmentByIdCities,
-  getApiV1DepartmentNameByName,
-  getApiV1DepartmentPagedList,
-  getApiV1DepartmentSearchByKeyword,
   getApiV1TraditionalFairAndFestival,
   getApiV1TraditionalFairAndFestivalById,
   getApiV1TraditionalFairAndFestivalByIdCity,

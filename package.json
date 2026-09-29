@@ -21,7 +21,7 @@
     "prepack": "pnpm build",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint --fix .",
     "deploy": "wrangler deploy",
     "type-check": "tsc --noEmit"
