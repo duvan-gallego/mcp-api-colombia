@@ -33,7 +33,7 @@ jobs:
       - name: Build project
         run: pnpm build
 
-      - name: Check for remaining ESLint errors
+      - name: Check for ESLint errors and warnings
         run: pnpm lint
 
       - name: Check for remaining formatting issues
