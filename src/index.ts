@@ -4,6 +4,7 @@ import { log } from './utils/common/logging.js';
 import { MCPStdioServer } from './stdio-server.js';
 import { MCPStreamableHttpServer } from './streamablehttp-server.js';
 import { createServer } from './create-server.js';
+import { resolveTransport } from './utils/transport.js';
 
 process.on('uncaughtException', (error) => {
   log.error('Uncaught exception', { error: String(error) });
@@ -17,12 +18,13 @@ process.on('unhandledRejection', (error) => {
 
 export async function main() {
   log.info('Starting MCP server...');
-  // Determine transport type
-  const transportType =
-    process.env.MCP_TRANSPORT || (process.argv.includes('--stdio') ? 'stdio' : 'sse');
+  const transport = resolveTransport(process.env.MCP_TRANSPORT, process.argv);
+  if (transport.usesLegacyAlias) {
+    log.warn('MCP_TRANSPORT=sse is deprecated; use MCP_TRANSPORT=streamable-http instead.');
+  }
 
   const mcpServer =
-    transportType === 'sse'
+    transport.type === 'streamable-http'
       ? new MCPStreamableHttpServer(createServer)
       : new MCPStdioServer(await createServer());
   await mcpServer.start();

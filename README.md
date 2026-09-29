@@ -35,6 +35,8 @@ Review and commit both `openapi/api-colombia.v1.json` and `src/client/generated`
 
 The server uses a 10-second API request timeout and retries transient `408`, `429`, and `5xx` responses up to three times. Configure these values with `API_TIMEOUT_MS` and `API_MAX_ATTEMPTS`. Logs are structured JSON written to stderr; set `LOG_LEVEL` to `error`, `warn`, `info` (default), or `debug`.
 
+The default transport is Streamable HTTP. Set `MCP_TRANSPORT=stdio` for local clients that use standard input/output, or `MCP_TRANSPORT=streamable-http` explicitly for HTTP. The `--stdio` argument is also supported when `MCP_TRANSPORT` is not set. `MCP_TRANSPORT=sse` remains a deprecated alias for Streamable HTTP.
+
 ### Test it by using the MCP Inspector with the STDIO transport type
 
 ```
