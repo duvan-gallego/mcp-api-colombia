@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { ApiRequestError, ApiRequestTimeoutError } from '../client/api-client.js';
 import { ToolError } from './common/api-errors.js';
 import {
   createToolResponse,
   executeApiCall,
   extractArguments,
+  handleToolError,
   validateToolInput,
 } from './utils.js';
 
@@ -43,8 +45,21 @@ describe('tool utilities', () => {
       expect.objectContaining({
         name: 'ToolError',
         code: 'TOOL_ERROR',
-        message: 'Get city failed: unavailable',
+        message: 'Get city failed. Please try again.',
       })
+    );
+  });
+
+  it('maps API failures to safe user-facing messages', () => {
+    expect(() => {
+      throw new ApiRequestTimeoutError(1000);
+    }).toThrow(ApiRequestTimeoutError);
+
+    expect(() => handleToolError(new ApiRequestTimeoutError(1000), 'Get city')).toThrow(
+      'API Colombia did not respond in time. Please try again.'
+    );
+    expect(() => handleToolError(new ApiRequestError('status 503', 503), 'Get city')).toThrow(
+      'API Colombia is temporarily unavailable. Please try again.'
     );
   });
 

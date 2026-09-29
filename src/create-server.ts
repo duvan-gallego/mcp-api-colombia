@@ -1,7 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { version } from './utils/version.js';
-import { log } from './utils/helpers.js';
+import { log } from './utils/common/logging.js';
 import { COUNTRY_TOOLS, DEPARTMENT_TOOLS, REGION_TOOLS } from './tools/tools.js';
 import { COUNTRY_HANDLERS, DEPARTMENT_HANDLERS, REGION_HANDLERS } from './tools/tool-handlers.js';
 import { CITY_HANDLERS, CITY_TOOLS } from './tools/definitions/city.js';
@@ -91,13 +91,13 @@ export const createServer = async (): Promise<Server> => {
   const server = new Server({ name: 'mcp-api-colombia', version }, { capabilities: { tools: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    log('Received list tools request');
+    log.debug('Received list tools request');
     return { tools: ALL_TOOLS };
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const toolName = request.params.name;
-    log('Received tool call:', toolName);
+    log.info('Received tool call', { toolName });
 
     try {
       const handler = ALL_HANDLERS[toolName];
@@ -106,7 +106,7 @@ export const createServer = async (): Promise<Server> => {
       }
       return await handler(request);
     } catch (error) {
-      log('Error handling tool call:', error);
+      log.error('Error handling tool call', { toolName, error: String(error) });
       return {
         content: [
           {

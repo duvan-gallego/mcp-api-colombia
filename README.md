@@ -31,6 +31,10 @@ pnpm generate:api
 
 Review and commit both `openapi/api-colombia.v1.json` and `src/client/generated` with the corresponding code changes.
 
+### Runtime configuration
+
+The server uses a 10-second API request timeout and retries transient `408`, `429`, and `5xx` responses up to three times. Configure these values with `API_TIMEOUT_MS` and `API_MAX_ATTEMPTS`. Logs are structured JSON written to stderr; set `LOG_LEVEL` to `error`, `warn`, `info` (default), or `debug`.
+
 ### Test it by using the MCP Inspector with the STDIO transport type
 
 ```

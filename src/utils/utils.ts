@@ -1,6 +1,11 @@
 import { ToolError } from './common/api-errors.js';
 import { log } from './common/logging.js';
 import { ToolRequest, ToolResponse } from './common/schemas.js';
+import {
+  ApiRequestError,
+  ApiRequestTimeoutError,
+  configureApiClient,
+} from '../client/api-client.js';
 import { z } from 'zod';
 
 export function createToolResponse(data: unknown, isError = false): ToolResponse {
@@ -17,14 +22,24 @@ export function createToolResponse(data: unknown, isError = false): ToolResponse
 }
 
 export function handleToolError(error: unknown, context: string): never {
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  log.error(`${context} failed`, { error: errorMessage });
+  log.error(`${context} failed`, {
+    error: error instanceof Error ? error.message : String(error),
+    ...(error instanceof ApiRequestError && { upstreamStatus: error.status }),
+  });
 
   if (error instanceof z.ZodError) {
     throw new ToolError(`Invalid input: ${context}`, error.format());
   }
 
-  throw new ToolError(`${context} failed: ${errorMessage}`);
+  if (error instanceof ApiRequestTimeoutError) {
+    throw new ToolError('API Colombia did not respond in time. Please try again.');
+  }
+
+  if (error instanceof ApiRequestError) {
+    throw new ToolError('API Colombia is temporarily unavailable. Please try again.');
+  }
+
+  throw new ToolError(`${context} failed. Please try again.`);
 }
 
 export function validateToolInput<T>(schema: z.ZodSchema<T>, data: unknown, context: string): T {
@@ -36,6 +51,7 @@ export function validateToolInput<T>(schema: z.ZodSchema<T>, data: unknown, cont
 }
 
 export async function executeApiCall<T>(apiCall: () => Promise<T>, context: string): Promise<T> {
+  configureApiClient();
   try {
     return await apiCall();
   } catch (error) {

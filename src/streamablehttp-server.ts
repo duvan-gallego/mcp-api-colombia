@@ -93,7 +93,17 @@ export class MCPStreamableHttpServer {
     const app = express();
 
     app.use((req, res, next) => {
+      const requestId = req.get('x-request-id') || randomUUID();
+      res.locals.requestId = requestId;
+      res.set('x-request-id', requestId);
+      next();
+    });
+    app.use((req, res, next) => {
       if (!isAllowedOrigin(req.get('origin'))) {
+        log.warn('Rejected request with invalid Origin header', {
+          requestId: res.locals.requestId as string,
+          origin: req.get('origin'),
+        });
         this.sendError(res, 403, 'Forbidden: invalid Origin header.');
         return;
       }
@@ -144,9 +154,11 @@ export class MCPStreamableHttpServer {
 
   private async handlePostRequest(req: Request, res: Response, port: number): Promise<void> {
     const sessionId = req.get(SESSION_ID_HEADER_NAME);
+    const requestId = res.locals.requestId as string;
 
     try {
       if (sessionId) {
+        log.debug('Handling MCP session request', { requestId, sessionId });
         const session = await this.getSession(sessionId);
         if (!session) {
           this.sendError(res, 404, 'Session not found.');
@@ -162,9 +174,10 @@ export class MCPStreamableHttpServer {
         return;
       }
 
+      log.info('Initializing MCP session', { requestId });
       await this.createSession(req, res, port);
     } catch (error) {
-      log.error('Error handling MCP request', { error: String(error) });
+      log.error('Error handling MCP request', { requestId, sessionId, error: String(error) });
       if (!res.headersSent) {
         this.sendError(res, 500, 'Internal server error.');
       }
@@ -173,6 +186,7 @@ export class MCPStreamableHttpServer {
 
   private async handleDeleteRequest(req: Request, res: Response): Promise<void> {
     const sessionId = req.get(SESSION_ID_HEADER_NAME);
+    const requestId = res.locals.requestId as string;
     if (!sessionId) {
       this.sendError(res, 400, 'Bad Request: missing MCP-Session-Id header.');
       return;
@@ -184,6 +198,7 @@ export class MCPStreamableHttpServer {
       return;
     }
 
+    log.info('Closing MCP session', { requestId, sessionId });
     await session.transport.handleRequest(req, res);
     await this.closeSession(sessionId);
   }

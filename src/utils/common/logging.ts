@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 export const LogLevel = {
   ERROR: 'error',
   WARN: 'warn',
@@ -9,39 +8,38 @@ export const LogLevel = {
 type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 type LogMeta = Record<string, unknown>;
 
-interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  meta?: LogMeta;
+const levelPriority: Record<LogLevel, number> = {
+  [LogLevel.ERROR]: 0,
+  [LogLevel.WARN]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.DEBUG]: 3,
+};
+
+function getMinimumLevel(): LogLevel {
+  const configuredLevel = process.env.LOG_LEVEL?.toLowerCase();
+  return Object.values(LogLevel).includes(configuredLevel as LogLevel)
+    ? (configuredLevel as LogLevel)
+    : LogLevel.INFO;
 }
 
-const stringify = (obj: unknown) =>
-  JSON.stringify(obj, null, process.env.NODE_ENV === 'development' ? 2 : 0);
+function write(level: LogLevel, message: string, meta?: LogMeta): void {
+  if (levelPriority[level] > levelPriority[getMinimumLevel()]) {
+    return;
+  }
 
-// Helper to create log entries
-function createLogEntry(level: LogLevel, message: string, meta?: LogMeta): LogEntry {
-  return {
-    timestamp: new Date().toISOString(),
-    level,
-    message,
-    ...(meta && { meta }),
-  };
+  process.stderr.write(
+    `${JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      ...(meta && { meta }),
+    })}\n`
+  );
 }
 
 export const log = {
-  error: (message: string, meta?: LogMeta) => {
-    console.error(stringify(createLogEntry(LogLevel.ERROR, message, meta)));
-  },
-  warn: (message: string, meta?: LogMeta) => {
-    console.warn(stringify(createLogEntry(LogLevel.WARN, message, meta)));
-  },
-  info: (message: string, meta?: LogMeta) => {
-    console.log(stringify(createLogEntry(LogLevel.INFO, message, meta)));
-  },
-  debug: (message: string, meta?: LogMeta) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.debug(stringify(createLogEntry(LogLevel.DEBUG, message, meta)));
-    }
-  },
+  error: (message: string, meta?: LogMeta) => write(LogLevel.ERROR, message, meta),
+  warn: (message: string, meta?: LogMeta) => write(LogLevel.WARN, message, meta),
+  info: (message: string, meta?: LogMeta) => write(LogLevel.INFO, message, meta),
+  debug: (message: string, meta?: LogMeta) => write(LogLevel.DEBUG, message, meta),
 };
