@@ -14,11 +14,22 @@ After cloning the project, install all the dependencies
 pnpm install
 ```
 
-Once all the dependencies are installed, generate the [api-colombia](https://api-colombia.com/) client
+Build the project. The generated API client and its OpenAPI snapshot are versioned in the repository, so this step does not require network access.
 
 ```
-pnpm prepare
+pnpm build
 ```
+
+### Updating the API client
+
+When API Colombia publishes a change you want to adopt, refresh the versioned OpenAPI snapshot and regenerate the client:
+
+```
+pnpm update:api-spec
+pnpm generate:api
+```
+
+Review and commit both `openapi/api-colombia.v1.json` and `src/client/generated` with the corresponding code changes.
 
 ### Test it by using the MCP Inspector with the STDIO transport type
 
@@ -26,7 +37,7 @@ pnpm prepare
 npx @modelcontextprotocol/inspector node dist/index.js --stdio
 ```
 
-Note: If you make changes to your code, remember to rebuild:
+Note: If you make changes to your code, rebuild:
 
 ```
 pnpm build

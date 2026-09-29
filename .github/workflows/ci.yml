@@ -30,6 +30,9 @@ jobs:
       - name: Run TypeScript type checking
         run: pnpm type-check
 
+      - name: Build project
+        run: pnpm build
+
       - name: Check for remaining ESLint errors
         run: pnpm lint
 

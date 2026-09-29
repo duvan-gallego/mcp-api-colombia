@@ -1,6 +1,6 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-  input: 'https://api-colombia.com/swagger/v1/swagger.json',
+  input: 'openapi/api-colombia.v1.json',
   output: 'src/client/generated',
 });
