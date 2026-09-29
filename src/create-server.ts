@@ -40,9 +40,10 @@ import {
   TRADITIONAL_FAIR_AND_FESTIVAL_HANDLERS,
   TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
 } from './tools/definitions/traditional-fair-and-festival.js';
+import { normalizeTool } from './utils/common/normalize-tool-schema.js';
 
-export const createServer = async (): Promise<Server> => {
-  const ALL_TOOLS = [
+export const getAllTools = () =>
+  [
     ...COUNTRY_TOOLS,
     ...REGION_TOOLS,
     ...DEPARTMENT_TOOLS,
@@ -61,7 +62,10 @@ export const createServer = async (): Promise<Server> => {
     ...HOLIDAY_TOOLS,
     ...TYPICAL_DISH_TOOLS,
     ...TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
-  ];
+  ].map(normalizeTool);
+
+export const createServer = async (): Promise<Server> => {
+  const ALL_TOOLS = getAllTools();
 
   const ALL_HANDLERS = {
     ...COUNTRY_HANDLERS,
