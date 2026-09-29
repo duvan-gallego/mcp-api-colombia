@@ -1,4 +1,4 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { Tool } from '@modelcontextprotocol/server';
 import { ToolHandlers } from '../../utils/types.js';
 import { createToolResponse, executeApiCall } from '../../utils/utils.js';
 import { getApiV1CountryColombia } from '../../client/generated/index.js';

@@ -1,4 +1,4 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { Tool } from '@modelcontextprotocol/server';
 
 type InputSchema = Tool['inputSchema'];
 type SchemaObject = Record<string, unknown>;

@@ -8,7 +8,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "build": "pnpm clean && tsc",
@@ -34,9 +34,11 @@
   "license": "MIT",
   "dependencies": {
     "@hey-api/client-fetch": "^0.13.1",
-    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@modelcontextprotocol/core": "^2.2.0",
+    "@modelcontextprotocol/node": "^2.1.0",
+    "@modelcontextprotocol/server": "^2.2.0",
     "express": "^5.1.0",
-    "zod": "^3.25.74"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

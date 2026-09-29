@@ -1,11 +1,11 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
+import { McpServer } from '@modelcontextprotocol/server';
 import { log } from './utils/common/logging.js';
 
 export class MCPStdioServer {
-  server: Server;
+  server: McpServer;
 
-  constructor(server: Server) {
+  constructor(server: McpServer) {
     this.server = server;
   }
 
