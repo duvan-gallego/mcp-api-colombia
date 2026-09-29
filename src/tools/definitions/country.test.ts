@@ -26,7 +26,7 @@ describe('country tools', () => {
     await expect(COUNTRY_HANDLERS['get-country-colombia']({} as never)).rejects.toMatchObject({
       name: 'ToolError',
       code: 'TOOL_ERROR',
-      message: 'Get country colombia data failed: upstream unavailable',
+      message: 'Get country colombia data failed. Please try again.',
     });
   });
 });

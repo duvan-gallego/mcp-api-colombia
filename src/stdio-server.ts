@@ -1,6 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { log } from './utils/helpers.js';
+import { log } from './utils/common/logging.js';
 
 export class MCPStdioServer {
   server: Server;
@@ -10,15 +10,15 @@ export class MCPStdioServer {
   }
 
   async start() {
-    log('Starting MCP server using Stdio transport...');
+    log.info('Starting MCP server using Stdio transport...');
 
     try {
       const transport = new StdioServerTransport();
-      log('StdioServerTransport created');
+      log.debug('StdioServerTransport created');
       await this.server.connect(transport);
-      log('Server connected and running');
+      log.info('Server connected and running');
     } catch (error) {
-      log('Fatal error:', error);
+      log.error('Fatal error starting stdio transport', { error: String(error) });
       process.exit(1);
     }
   }
