@@ -21,10 +21,10 @@ export async function main() {
   const transportType =
     process.env.MCP_TRANSPORT || (process.argv.includes('--stdio') ? 'stdio' : 'sse');
 
-  const server = await createServer();
-
   const mcpServer =
-    transportType === 'sse' ? new MCPStreamableHttpServer(server) : new MCPStdioServer(server);
+    transportType === 'sse'
+      ? new MCPStreamableHttpServer(createServer)
+      : new MCPStdioServer(await createServer());
   await mcpServer.start();
 }
 

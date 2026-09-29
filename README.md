@@ -45,6 +45,8 @@ pnpm build
 
 ### Test it by using the MCP Inspector with the streamable HTTP transport type
 
+The HTTP server listens on `127.0.0.1:3000` by default. Set `MCP_PORT` to use a different local port. Sessions expire after 30 minutes of inactivity; set `MCP_SESSION_TTL_MS` to change that limit. Browser requests are limited to local origins unless `MCP_ALLOWED_ORIGINS` is set to a comma-separated allowlist.
+
 1. Start the HTTP server
 
 ```
