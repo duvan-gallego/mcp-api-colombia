@@ -140,7 +140,15 @@ describe('Streamable HTTP security', () => {
     expect(listToolsResponse.status).toBe(200);
     await expect(readMcpResponse(listToolsResponse)).resolves.toMatchObject({
       result: {
-        tools: expect.arrayContaining([expect.objectContaining({ name: 'get-country-colombia' })]),
+        tools: expect.arrayContaining([
+          expect.objectContaining({
+            name: 'get-country-colombia',
+            outputSchema: expect.objectContaining({
+              properties: expect.objectContaining({ data: expect.any(Object) }),
+              required: ['data'],
+            }),
+          }),
+        ]),
       },
     });
   });

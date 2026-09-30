@@ -34,6 +34,8 @@ MCP_TRANSPORT=stdio pnpm start
 
 The generated API client and its OpenAPI snapshot are versioned in the repository, so `pnpm build` does not require network access.
 
+Successful tool calls include both text content and structured MCP content in the form `{ "data": <API response> }`.
+
 ## Runtime configuration
 
 | Variable              | Default            | Description                                                                |
