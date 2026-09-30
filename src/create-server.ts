@@ -119,7 +119,7 @@ export const createServer = async (): Promise<McpServer> => {
 
   for (const tool of allTools) {
     const handler = allHandlers[tool.name];
-    server.registerTool(
+    server.registerTool<typeof toolOutputSchema, ReturnType<typeof createInputSchema>>(
       tool.name,
       {
         description: tool.description,
