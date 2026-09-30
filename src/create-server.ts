@@ -1,4 +1,4 @@
-import { McpServer, Tool } from '@modelcontextprotocol/server';
+import { McpServer, type StandardSchemaWithJSON, type Tool } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { version } from './utils/version.js';
 import { log } from './utils/common/logging.js';
@@ -119,12 +119,15 @@ export const createServer = async (): Promise<McpServer> => {
 
   for (const tool of allTools) {
     const handler = allHandlers[tool.name];
-    server.registerTool<typeof toolOutputSchema, ReturnType<typeof createInputSchema>>(
+    const inputSchema: StandardSchemaWithJSON = createInputSchema(tool);
+    const outputSchema: StandardSchemaWithJSON = toolOutputSchema;
+
+    server.registerTool(
       tool.name,
       {
         description: tool.description,
-        inputSchema: createInputSchema(tool),
-        outputSchema: toolOutputSchema,
+        inputSchema,
+        outputSchema,
       },
       async (arguments_) => {
         log.info('Received tool call', { toolName: tool.name });
@@ -133,7 +136,7 @@ export const createServer = async (): Promise<McpServer> => {
           if (!handler) {
             throw new Error(`Unknown tool: ${tool.name}`);
           }
-          return await handler({ params: { arguments: arguments_ } });
+          return await handler({ params: { arguments: arguments_ as Record<string, unknown> } });
         } catch (error) {
           log.error('Error handling tool call', { toolName: tool.name, error: String(error) });
           return {
