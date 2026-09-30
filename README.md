@@ -1,87 +1,82 @@
-# Api Colombia MCP Server
+# API Colombia MCP Server
 
 The Model Context Protocol (MCP) is a standardized protocol for managing context between large language models (LLMs) and external systems. This repository provides an MCP Server for the [api-colombia](https://api-colombia.com/) API, allowing you to use the API through natural language. This MCP server supports the transport types STDIO and Streamable HTTP.
 
-# Api Colombia
+## API Colombia
 
-On its creators words, API Colombia is a public RESTful API that enables users to access a wide range of public information about the country of Colombia.
+API Colombia is a public REST API that provides information about Colombia.
 
-## Getting started
+## Requirements
 
-After cloning the project, install all the dependencies
+- Node.js 20 or newer
+- pnpm 10
+
+## Quick start
+
+Install dependencies and build the server:
 
 ```
 pnpm install
-```
-
-Build the project. The generated API client and its OpenAPI snapshot are versioned in the repository, so this step does not require network access.
-
-```
 pnpm build
 ```
 
-### Updating the API client
-
-When API Colombia publishes a change you want to adopt, refresh the versioned OpenAPI snapshot and regenerate the client:
-
-```
-pnpm update:api-spec
-pnpm generate:api
-```
-
-Review and commit both `openapi/api-colombia.v1.json` and `src/client/generated` with the corresponding code changes.
-
-### Runtime configuration
-
-The server uses a 10-second API request timeout and retries transient `408`, `429`, and `5xx` responses up to three times. Configure these values with `API_TIMEOUT_MS` and `API_MAX_ATTEMPTS`. Logs are structured JSON written to stderr; set `LOG_LEVEL` to `error`, `warn`, `info` (default), or `debug`.
-
-The default transport is Streamable HTTP. Set `MCP_TRANSPORT=stdio` for local clients that use standard input/output, or `MCP_TRANSPORT=streamable-http` explicitly for HTTP. The `--stdio` argument is also supported when `MCP_TRANSPORT` is not set.
-
-### Test it by using the MCP Inspector with the STDIO transport type
-
-```
-npx @modelcontextprotocol/inspector node dist/index.js --stdio
-```
-
-Note: If you make changes to your code, rebuild:
-
-```
-pnpm build
-```
-
-### Test it by using the MCP Inspector with the streamable HTTP transport type
-
-The HTTP server listens on `127.0.0.1:3000` by default. Set `MCP_PORT` to use a different local port. Sessions expire after 30 minutes of inactivity; set `MCP_SESSION_TTL_MS` to change that limit. Browser requests are limited to local origins unless `MCP_ALLOWED_ORIGINS` is set to a comma-separated allowlist.
-
-1. Start the HTTP server
+Start the default Streamable HTTP server at `http://127.0.0.1:3000/mcp`:
 
 ```
 pnpm start
 ```
 
-2. Start the MCP inspector
+For a local STDIO client instead:
 
 ```
-npx @modelcontextprotocol/inspector
+MCP_TRANSPORT=stdio pnpm start
 ```
 
-3. Connect the MCP inspector to the local HTTP server
+The generated API client and its OpenAPI snapshot are versioned in the repository, so `pnpm build` does not require network access.
 
-   <img width="1197" height="764" alt="image" src="https://github.com/user-attachments/assets/739afeaf-ba07-4e98-9b85-0ef2458151b4" />
+## Runtime configuration
 
-### Test it by using LM Studio
+| Variable              | Default            | Description                                                                |
+| --------------------- | ------------------ | -------------------------------------------------------------------------- |
+| `MCP_TRANSPORT`       | `streamable-http`  | Use `streamable-http` for the HTTP endpoint or `stdio` for a local client. |
+| `MCP_PORT`            | `3000`             | HTTP listening port. `PORT` is used when `MCP_PORT` is unset.              |
+| `MCP_SESSION_TTL_MS`  | `1800000`          | Inactive Streamable HTTP session lifetime in milliseconds.                 |
+| `MCP_ALLOWED_ORIGINS` | local origins only | Comma-separated browser-origin allowlist for HTTP requests.                |
+| `API_TIMEOUT_MS`      | `10000`            | Timeout for each API Colombia request in milliseconds.                     |
+| `API_MAX_ATTEMPTS`    | `3`                | Maximum attempts for retryable API Colombia `GET` and `HEAD` requests.     |
+| `LOG_LEVEL`           | `info`             | Minimum structured log level: `error`, `warn`, `info`, or `debug`.         |
 
-1. Download [LM Studio](https://lmstudio.ai/)
-2. Download and load the model you want to use for testing. A small but good one at the moment is the [Qwen3 4B Thinking 2507](https://modelscope.cn/models/Qwen/Qwen3-4B-Thinking-2507) model
-3. Build and start the MCP server
+When `MCP_TRANSPORT` is unset, `--stdio` also selects STDIO:
 
 ```
- pnpm build && pnpm start
+pnpm start -- --stdio
 ```
 
-4. Add the MCP configuration in LM Studio, putting the following text in the `mcp.json` file or clicking the Add to LM studio button. You can find more info about this [here](https://lmstudio.ai/blog/lmstudio-v0.3.17)
+## Connect a client
+
+### MCP Inspector: STDIO
 
 ```
+pnpm dlx @modelcontextprotocol/inspector node dist/index.js --stdio
+```
+
+Rebuild with `pnpm build` after changing the source.
+
+### MCP Inspector: Streamable HTTP
+
+Start the server with `pnpm start`, then launch the Inspector:
+
+```
+pnpm dlx @modelcontextprotocol/inspector
+```
+
+Connect it to `http://127.0.0.1:3000/mcp` using the Streamable HTTP transport.
+
+### LM Studio
+
+Build and start the HTTP server, then add this configuration in LM Studio:
+
+```json
 {
   "mcpServers": {
     "mcp-api-colombia": {
@@ -91,15 +86,20 @@ npx @modelcontextprotocol/inspector
 }
 ```
 
-[![Add MCP Server mcp-api-colombia to LM Studio](https://files.lmstudio.ai/deeplink/mcp-install-light.svg)](https://lmstudio.ai/install-mcp?name=mcp-api-colombia&config=eyJ1cmwiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAvbWNwIn0%3D)
+## Deploying Streamable HTTP
 
-5. Check that you can see all the available tools, enable and start interacting with them
+The HTTP process binds to loopback (`127.0.0.1`) by design. For a remote deployment, place a TLS-terminating reverse proxy on the same host in front of `http://127.0.0.1:<MCP_PORT>/mcp`. Configure the proxy to forward an allowed loopback `Host` header, and set `MCP_ALLOWED_ORIGINS` to the exact browser origins that may connect. STDIO is intended for local process-based clients and does not use an HTTP port.
 
-<img width="1706" height="1406" alt="image" src="https://github.com/user-attachments/assets/4335f9f0-6508-4844-aa22-eae3bf33958b" />
+## Updating the API client
 
-<img width="1711" height="1410" alt="image" src="https://github.com/user-attachments/assets/3ac541ef-ff40-4f6b-a527-daf1710f55c9" />
+When API Colombia publishes a change you want to adopt, refresh the versioned OpenAPI snapshot and regenerate the client:
 
-Note: Since Qwen3 4B is a small model and only has a context length of 32,768, you can't load all the tools at once, and because of that you will need to only load the ones you will work with. When using bigger models that support a bigger context length, that's not a problem.
+```
+pnpm update:api-spec
+pnpm generate:api
+```
+
+Review and commit both `openapi/api-colombia.v1.json` and `src/client/generated` with the corresponding code changes.
 
 ## License
 
