@@ -64,7 +64,7 @@ export const getAllTools = () =>
     ...TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
   ].map(normalizeTool);
 
-function createInputSchema(tool: Tool) {
+export function createInputSchema(tool: Tool) {
   const inputSchema = tool.inputSchema as {
     properties?: Record<string, { type?: string; enum?: string[]; description?: string }>;
     required?: string[];
@@ -88,10 +88,8 @@ function createInputSchema(tool: Tool) {
   return z.object(shape).strict();
 }
 
-export const createServer = async (): Promise<McpServer> => {
-  const ALL_TOOLS = getAllTools();
-
-  const ALL_HANDLERS = {
+export const getAllHandlers = () =>
+  ({
     ...COUNTRY_HANDLERS,
     ...REGION_HANDLERS,
     ...DEPARTMENT_HANDLERS,
@@ -110,12 +108,16 @@ export const createServer = async (): Promise<McpServer> => {
     ...HOLIDAY_HANDLERS,
     ...TYPICAL_DISH_HANDLERS,
     ...TRADITIONAL_FAIR_AND_FESTIVAL_HANDLERS,
-  };
+  }) as const;
+
+export const createServer = async (): Promise<McpServer> => {
+  const allTools = getAllTools();
+  const allHandlers = getAllHandlers();
 
   const server = new McpServer({ name: 'mcp-api-colombia', version });
 
-  for (const tool of ALL_TOOLS) {
-    const handler = ALL_HANDLERS[tool.name];
+  for (const tool of allTools) {
+    const handler = allHandlers[tool.name];
     server.registerTool(
       tool.name,
       {
