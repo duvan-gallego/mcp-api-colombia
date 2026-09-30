@@ -41,6 +41,7 @@ import {
   TRADITIONAL_FAIR_AND_FESTIVAL_TOOLS,
 } from './tools/definitions/traditional-fair-and-festival.js';
 import { normalizeTool } from './utils/common/normalize-tool-schema.js';
+import { toolOutputSchema } from './utils/common/schemas.js';
 
 export const getAllTools = () =>
   [
@@ -123,6 +124,7 @@ export const createServer = async (): Promise<McpServer> => {
       {
         description: tool.description,
         inputSchema: createInputSchema(tool),
+        outputSchema: toolOutputSchema,
       },
       async (arguments_) => {
         log.info('Received tool call', { toolName: tool.name });

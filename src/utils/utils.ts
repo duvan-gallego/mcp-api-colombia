@@ -16,6 +16,7 @@ export function createToolResponse(data: unknown, isError = false): ToolResponse
         text: JSON.stringify(data),
       },
     ],
+    structuredContent: { data },
     isError,
     _meta: {},
   };

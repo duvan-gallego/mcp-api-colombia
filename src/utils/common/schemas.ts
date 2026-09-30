@@ -6,6 +6,10 @@ export const emptySchema = {
   properties: {},
 } as const;
 
+export const toolOutputSchema = z.object({
+  data: z.unknown(),
+});
+
 export type ToolResponse = CallToolResult;
 
 // Schema definitions

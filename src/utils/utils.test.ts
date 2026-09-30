@@ -14,6 +14,7 @@ describe('tool utilities', () => {
   it('serializes data into MCP text content', () => {
     expect(createToolResponse({ name: 'Colombia' })).toEqual({
       content: [{ type: 'text', text: '{"name":"Colombia"}' }],
+      structuredContent: { data: { name: 'Colombia' } },
       isError: false,
       _meta: {},
     });

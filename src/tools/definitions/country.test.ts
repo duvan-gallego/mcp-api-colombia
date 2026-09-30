@@ -14,6 +14,7 @@ describe('country tools', () => {
 
     await expect(COUNTRY_HANDLERS['get-country-colombia']({} as never)).resolves.toEqual({
       content: [{ type: 'text', text: JSON.stringify(country) }],
+      structuredContent: { data: country },
       isError: false,
       _meta: {},
     });
